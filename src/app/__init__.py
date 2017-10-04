@@ -58,6 +58,7 @@ migrate = Migrate(app, db)
 # app.register_blueprint(admin_blueprint, url_prefix='/admin')
 
 from installer import *
+from mudexe import *
 
 # app.register_blueprint(rpg_blueprint, url_prefix='/rpg')
 # app.register_blueprint(campaign_blueprint, url_prefix='/campaign')
@@ -65,6 +66,7 @@ from installer import *
 # app.register_blueprint(world_blueprint, url_prefix='/world')
 
 installer = Installer(app, manager=manager, logging=utils.logging)
+mudexe = MudExe(app, manager=manager, logging=utils.logging)
 
 from app.views import *
 

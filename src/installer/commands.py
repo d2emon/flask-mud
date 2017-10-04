@@ -147,9 +147,3 @@ def install():
     """
     install1()
     install2()
-
-
-# Menu Items
-@manager.option('-n', '--name', dest='username', default=None)
-def change_password(username=None, **kwargs):
-    return
