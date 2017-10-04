@@ -1,6 +1,5 @@
 {
   "name": "flask-mud",
-  "version": "",
   "description": "Description of flask-mud",
   "main": "src/manage.py",
   "scripts": {
@@ -15,16 +14,14 @@
     "url": "git+https://github.com/d2emon/flask-mud.git"
   },
   "keywords": [
-    
     "flask",
-    
     "flask"
   ],
   "author": "Dmitry Kutsenko <d2emonium@gmail.com>",
   "license": "GPL-3.0",
   "private": "True",
   "bugs": {
-    "url": "https://github.com/d2emon/flask-blog/issues"
+    "url": "https://github.com/d2emon/flask-mud/issues"
   },
   "homepage": "https://github.com/d2emon/flask-mud#readme",
   "devDependencies": {
@@ -38,5 +35,6 @@
   "dependencies": {
     "gulpfile": "git+https://github.com/d2emon/gulpfile.git",
     "shelljs": "^0.7.8"
-  }
+  },
+  "version": "1.0.0"
 }

@@ -1,6 +1,6 @@
 {
-  "name": "flask-template",
-  "description": "Template for Flask projects",
+  "name": "flask-mud",
+  "description": "Flask MUD implementation",
   "main": "src/manage.py",
   "authors": [
     "Dmitry Kutsenko <d2emonium@gmail.com>"
@@ -10,7 +10,7 @@
     "template",
     "flask"
   ],
-  "homepage": "https://github.com/d2emon/flask-template",
+  "homepage": "https://github.com/d2emon/flask-mud",
   "private": true,
   "ignore": [
     "**/.*",
@@ -26,5 +26,5 @@
     "dropzone": "^5.0.1",
     "components-font-awesome": "^4.7.0",
     "crud-assets": "git+https://github.com/d2emon/crud-assets.git"
-  }  
+  }
 }
