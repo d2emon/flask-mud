@@ -9,7 +9,7 @@ from global_vars import logger
 
 from .hmk import hmk
 from .makeworld import makeworld
-from .ogenerate import compile as compile_ogenerate
+from .ogenerate import ogenerate
 from .makeuaf import compile as compile_makeuaf
 from .mud_exe import compile as compile_mud_exe
 from .mud1 import compile as compile_mud_1
@@ -101,8 +101,7 @@ def resetdata():
     Generate reset data
     """
     print("Compiling reset data compiler")
-    e = compile_ogenerate()
-    e()
+    ogenerate()
     cp("ob.out", "reset_data")
     print("Reset data generated")
 
