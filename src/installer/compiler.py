@@ -1,4 +1,4 @@
-from .global_vars import logger
+from global_vars import logger
 
 
 def gcc(src, dst, libs=[]):

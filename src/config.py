@@ -15,14 +15,9 @@ class Config(object):
     DEBUG = False
     TESTING = False
 
-    LOG = {
-        "FILENAME": os.path.join(BASE_DIR, "log", "execom.log"),
-        "MAX_BYTES": 1024 * 1024,
-        "BACKUP_COUNT": 10,
-        "FORMAT": "%(asctime)s[%(levelname)s]:\t%(message)s\tin %(module)s at %(lineno)d",
-    }
+    CACHE_TYPE = "simple"
 
-    VIEW_CASE = "edit_case"
+    LOG_FILENAME = os.path.join(BASE_DIR, "log", "rpg.log")
 
     UPLOAD_PATH = os.path.join(BASE_DIR, "upload")
     # UPLOAD_FOLDER = './static/upload/'
@@ -31,7 +26,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # configuration page num
-    RECORDS_ON_PAGE = 50
+    RECORDS_ON_PAGE = 10
     # PER_PAGE = 10
 
     STATIC_FOLDER = os.path.join(BASE_DIR, 'static')

@@ -4,7 +4,7 @@ from flask_script import Manager
 # from .models import *
 # from .views import rpg as rpg_blueprint
 from .commands import manager as install_manager
-from .global_vars import set_logger
+from global_vars import set_logger
 
 
 # __version__ = '3.3.7.1.dev1'
@@ -26,7 +26,7 @@ class Installer(object):
         # app.register_blueprint(gurps_blueprint, url_prefix='/gurps')
         # app.register_blueprint(tnt_blueprint, url_prefix='/tnt')
 
-        global_vars.set_logger(app.logger)
+        set_logger(app.logger)
         if manager is None:
             manager = Manager(usage="Application Installer")
         manager.add_command("install", install_manager)

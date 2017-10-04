@@ -4,11 +4,11 @@ from flask_script import Manager
 # from .models import User, Role
 
 
-from .global_vars import logger
+from global_vars import logger
 
 
 from .hmk import hmk
-from .makeworld import compile as compile_makeworld
+from .makeworld import makeworld
 from .ogenerate import compile as compile_ogenerate
 from .makeuaf import compile as compile_makeuaf
 from .mud_exe import compile as compile_mud_exe
@@ -91,8 +91,7 @@ def worldmake():
     Initialize game universe
     """
     print("Compiling world maker")
-    e = compile_makeworld()
-    e()
+    makeworld()
     print("Game universe intialised")
 
 
