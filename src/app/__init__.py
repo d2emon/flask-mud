@@ -64,7 +64,7 @@ from installer import *
 # app.register_blueprint(session_blueprint, url_prefix='/session')
 # app.register_blueprint(world_blueprint, url_prefix='/world')
 
-installer = Installer(app, manager)
+installer = Installer(app, manager=manager, logging=utils.logging)
 
 from app.views import *
 

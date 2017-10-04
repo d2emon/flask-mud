@@ -4,6 +4,9 @@ from flask_script import Manager
 # from .models import User, Role
 
 
+from .global_vars import logger
+
+
 from .hmk import hmk
 from .makeworld import compile as compile_makeworld
 from .ogenerate import compile as compile_ogenerate
@@ -16,15 +19,18 @@ manager = Manager(usage="Application installer")
 
 
 def mkdir(dirname):
-    print(">>> mkdir %s" % (dirname, ))
+    print(logger)
+    logger().debug("mkdir %s" % (dirname, ))
 
 
 def catnull(filename):
-    print(">>> cat </dev/null >%s" % (filename, ))
+    print(logger)
+    logger().debug("cat </dev/null >%s" % (filename, ))
 
 
 def cp(src, dst):
-    print(">>> cp %s %s" % (src, dst))
+    print(logger)
+    logger().debug("cp %s %s" % (src, dst))
 
 
 # Compilers
@@ -58,7 +64,9 @@ def compileh():
     Compile .h constructor
     """
     print("Compiling .h constructor")
-    print(hmk("files.h"))
+    logger().debug("./hmk >%s", "files.h")
+    settings = hmk()
+    logger().debug(settings)
     print(".h built")
 
 

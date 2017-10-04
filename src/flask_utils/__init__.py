@@ -10,7 +10,7 @@ class FlaskUtils(object):
         if app is not None:
             self.init_app(app)
 
-    def init_app(self, app):       
+    def init_app(self, app):
         app.static_folder = app.config.get('STATIC_FOLDER', 'static')
         app.template_folder = app.config.get('TEMPLATE_FOLDER', 'templates')
 

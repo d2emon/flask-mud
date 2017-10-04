@@ -35,12 +35,11 @@ def packitems(wd):
     return settings
 
 
-def hmk(dst):
+def hmk():
     wd = "/"  # getwd()
     settings = packitems(wd)
     host = "gethostname" * 50  # gethostmachine(31)
     settings["HOST_MACHINE"] = host[:31]
     for k, v in settings.items():
         print("#define %s \"%s\"" % (k, v))
-    print(">>> ./hmk >%s" % (dst, ))
     return settings
