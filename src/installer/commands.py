@@ -10,7 +10,7 @@ from global_vars import logger
 from .hmk import hmk
 from .makeworld import makeworld
 from .ogenerate import ogenerate
-from .makeuaf import compile as compile_makeuaf
+from .makeuaf import makeuaf
 from .mud_exe import compile as compile_mud_exe
 from .mud1 import compile as compile_mud_1
 
@@ -112,8 +112,7 @@ def generateuaf():
     Generate uaf
     """
     print("Compiling uaf generator")
-    e = compile_makeuaf()
-    e("uaf.rand")
+    makeuaf("uaf.rand")
     print("Ok")
 
 
