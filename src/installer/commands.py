@@ -4,7 +4,7 @@ from flask_script import Manager
 # from .models import User, Role
 
 
-from .hmk import compile as compile_hmk
+from .hmk import hmk
 from .makeworld import compile as compile_makeworld
 from .ogenerate import compile as compile_ogenerate
 from .makeuaf import compile as compile_makeuaf
@@ -58,8 +58,7 @@ def compileh():
     Compile .h constructor
     """
     print("Compiling .h constructor")
-    e = compile_hmk()
-    e("files.h")
+    print(hmk("files.h"))
     print(".h built")
 
 
