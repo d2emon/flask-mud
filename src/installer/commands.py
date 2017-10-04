@@ -19,17 +19,14 @@ manager = Manager(usage="Application installer")
 
 
 def mkdir(dirname):
-    print(logger)
     logger().debug("mkdir %s" % (dirname, ))
 
 
 def catnull(filename):
-    print(logger)
     logger().debug("cat </dev/null >%s" % (filename, ))
 
 
 def cp(src, dst):
-    print(logger)
     logger().debug("cp %s %s" % (src, dst))
 
 
