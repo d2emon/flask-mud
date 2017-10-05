@@ -5,7 +5,11 @@ from flask_script import Manager
 
 
 from global_vars import logger
+from mudexe.mud.user import User
+
+
 from mudexe.gamego.signals import sig_init, sig_ctrlc
+from mudexe.talker import talker
 
 
 manager = Manager(usage="Main application")
@@ -14,20 +18,7 @@ manager = Manager(usage="Main application")
 # ???
 argv_p = []
 # ???
-globme = ""
-# ???
 tty = 0
-
-
-# ???
-def cuserid(user):
-    logger().debug("<<< cuserid(%s)" % (user, ))
-    return 0
-
-
-# ???
-def talker(user):
-    logger().debug("<<< talker(%s)" % (user, ))
 
 
 @manager.option('-n', '--name', dest='username', default=None)
@@ -35,7 +26,7 @@ def play(username=None, **kwargs):
     """
     Play game
     """
-    global globme, tty, argv_p
+    global tty, argv_p
     sig_init()
     argv_p = username
     if username is None:
@@ -47,12 +38,9 @@ def play(username=None, **kwargs):
     #   initbbc()
     #   initscr()
     #   topscr()
-    if username == "Phantom":
-        globme = "The %s" % (username)
-    else:
-        globme = username
-    print("Hello %s" % (globme))
-    logger().info("GAME ENTRY: %s[%s]", globme, cuserid(None))
-    talker(globme)
+    user = User(username)
+    print("Hello %s" % (user.fullname))
+    logger().info("GAME ENTRY: %s[%s]", user.fullname, user.cuserid(None))
+    talker(user)
 
     sig_ctrlc()
