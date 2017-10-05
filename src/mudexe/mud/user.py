@@ -1,14 +1,34 @@
 from global_vars import logger
+from ..gamego import crapup
 from .textbuff import TextBuffer
 
 
+class PlayerData():
+    def load(self, ct):
+        self.ct = ct
+        self.name = ""
+        self.loc = 0
+        self.pos = -1
+        self.lev = 1
+        self.vis = 0
+        self.strength = -1
+        self.wpn = -1
+        self.sex = 0
+
+
 class User():
+    # ???
+    iamon = False
+    # ???
+    curch = 0
+
     def __init__(self, name):
         self.name = name  # globme
         self.i_setup = False
         self.cms = -1
         self.mynum = 0
         # Other
+        self.player = PlayerData()
         self.buff = TextBuffer()
 
     @property
@@ -23,50 +43,29 @@ class User():
         logger().debug("<<< cuserid(%s)" % (user, ))
         return 0
 
-    def putmeon(self):
-        """
- char *name;
-    {
-    extern long mynum,curch;
-    extern long maxu;
-    long ct,f;
-    FILE *unit;
-    extern long iamon;
-    iamon=0;
-    unit=openworld();
-    ct=0;
-    f=0;
-    if(fpbn(name)!= -1)
-       {
-       crapup("You are already on the system - you may only be on once at a time");
-       }
-    while((f==0)&&(ct<maxu))
-       {
-       if (!strlen(pname(ct))) f=1;
-       else
-          ct++;
-       }
-    if(ct==maxu)
-       {
-       mynum=maxu;
-       return;
-       }
-    strcpy(pname(ct),name);
-    setploc(ct,curch);
-    setppos(ct,-1);
-    setplev(ct,1);
-    setpvis(ct,0);
-    setpstr(ct,-1);
-    setpwpn(ct,-1);
-    setpsex(ct,0);
-    mynum=ct;
-iamon=1;
-    }
-        """
+    def putmeon(self, world=None):
+        self.iamon = False
+        world.openworld()
+        f = False
+        if self.fpbn() != -1:
+            crapup("You are already on the system - you may only be on once at a time")
+        self.mynum = world.find_empty()
+        if self.mynum == world.maxu:
+            return False
+        self.player = world.players[self.mynum]
+        self.player.name = self.name
+        self.player.loc = self.curch
+        self.player.pos = -1
+        self.player.lev = 1
+        self.player.vis = 0
+        self.player.strength = -1
+        self.player.wpn = -1
+        self.player.sex = 0
+        self.iamon = True
+        return True
 
-
-def rte(self):
-    """
+    def rte(self):
+        """
  char *name;
     {
     extern long cms;
@@ -92,4 +91,8 @@ def rte(self):
     eorte();
     rdes=0;tdes=0;vdes=0;
     }
-    """
+        """
+
+    def fpbn(self):
+        logger().debug("<<< fpbn(%s)", self.name)
+        return 0

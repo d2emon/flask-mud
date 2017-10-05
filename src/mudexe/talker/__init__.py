@@ -283,11 +283,11 @@ def talker(user):
     # extern long curch,cms;
     # FILE *fl;
     # char string[128];
-    user.cms = -1
-    user.putmeon()
     world = World()
     if not world.openworld():
         crapup("Sorry AberMUD is currently unavailable")
+    user.cms = -1
+    user.putmeon(world)
     if user.mynum >= world.maxu:
         print("\nSorry AberMUD is full at the moment")
         return 0

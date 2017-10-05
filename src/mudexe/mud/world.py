@@ -3,7 +3,10 @@ from global_vars import logger
 
 class World():
     # ???
-    maxu = 0
+    maxu = 255
+
+    def __init__(self):
+        self.players = [None] * self.maxu
 
     # ???
     def openworld(self):
@@ -13,3 +16,9 @@ class World():
     # ???
     def closeworld(self):
         logger().debug("<<< closeworld()")
+
+    def find_empty(self):
+        for p in len(self.players):
+            if self.players[p] is None:
+                return p
+        return self.maxu
