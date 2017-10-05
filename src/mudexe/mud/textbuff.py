@@ -14,3 +14,7 @@ class TextBuffer():
     # ???
     def pbfr(self):
         logger().debug("<<< pbfr()")
+
+    # ???
+    def bprintf(self, msg):
+        logger().debug("<<< bprintf(%s)", msg)

@@ -69,24 +69,6 @@ long offd,offs,len;
     }
     """
 
-
-def mstoout(block, name):
-    """
- long *block;char *name;
-    {
-    extern long debug_mode;
-    char luser[40];
-    char *x;
-    x=(char *)block;
-    /* Print appropriate stuff from data block */
-    strcpy(luser,name);lowercase(luser);
-if(debug_mode)    bprintf("\n<%d>",block[1]);
-    if (block[1]<-3) sysctrl(block,luser);
-    else
-       bprintf("%s", (x+2*sizeof(long)));
-    }
-    """
-
 # long gurum=0;
 # long convflg=0;
 
@@ -209,20 +191,6 @@ def send2(block):
     """
 
 
-def readmsg(channel, block, num):
-    """
- long channel;
- long *block;
- int num;
-    {
-    long buff[64],actnum;
-    sec_read(channel,buff,0,64);
-    actnum=num*2-buff[0];
-    sec_read(channel,block,actnum,128);
-    }
-    """
-
-
 # FILE *fl_com;
 # extern long findstart();
 # extern long findend();
@@ -251,28 +219,6 @@ intr:if(flock(fileno(unit),LOCK_EX)== -1)
         case EHOSTUNREACH:crapup("PANIC exit access failure, NFS gone for a snooze");
     }
     return(unit);
-    }
-    """
-
-
-def findstart(unit):
-    """
- FILE *unit;
-    {
-    long bk[2];
-    sec_read(unit,bk,0,1);
-    return(bk[0]);
-    }
-    """
-
-
-def findend(unit):
-    """
- FILE *unit;
-    {
-    long bk[3];
-    sec_read(unit,bk,0,2);
-    return(bk[1]);
     }
     """
 
@@ -400,16 +346,6 @@ char *message;
     """
 
 
-def sysctrl(block, luser):
-    """
- long *block;
- char *luser;
-    {
-    gamrcv(block);
-    }
-    """
-
-
 # long  bound=0;
 # long  tmpimu=0;
 # char  *echoback="*e";
@@ -478,28 +414,6 @@ sendsys(globme,globme,-10113,0,bk);
 closeworld();
 if(!zapped) saveme();
 chksnp();
-    }
-    """
-
-
-# long lasup=0;
-
-
-def update(name):
-    """
- char *name;
-    {
-    extern long mynum,cms;
-    FILE *unit;
-    long xp;
-    extern long lasup;
-    xp=cms-lasup;
-    if(xp<0) xp= -xp;
-    if(xp<10) goto noup;
-    unit=openworld();
-    setppos(mynum,cms);
-    lasup=cms;
-    noup:;
     }
     """
 
