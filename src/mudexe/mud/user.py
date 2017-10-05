@@ -17,16 +17,13 @@ class PlayerData():
 
 
 class User():
-    # ???
-    iamon = False
-    # ???
-    curch = 0
-
     def __init__(self, name):
         self.name = name  # globme
         self.i_setup = False
         self.cms = -1
         self.mynum = 0
+        self.curch = 0
+        self.iamon = False
         # Other
         self.player = PlayerData()
         self.buff = TextBuffer()
@@ -47,12 +44,10 @@ class User():
         self.iamon = False
         world.openworld()
         f = False
-        if self.fpbn() != -1:
+        if self.fpbn() is not None:
             crapup("You are already on the system - you may only be on once at a time")
-        self.mynum = world.find_empty()
-        if self.mynum == world.maxu:
-            return False
-        self.player = world.players[self.mynum]
+        self.mynum = world.find_empty(self.player)
+        self.player.load(self.mynum)
         self.player.name = self.name
         self.player.loc = self.curch
         self.player.pos = -1
@@ -95,4 +90,4 @@ class User():
 
     def fpbn(self):
         logger().debug("<<< fpbn(%s)", self.name)
-        return 0
+        return None

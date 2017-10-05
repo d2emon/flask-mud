@@ -8,7 +8,7 @@ are (C) 1987/88  Alan Cox,Jim Finnis,Richard Acott
 This file holds the basic communications routines
 """
 from global_vars import logger
-from ..gamego import crapup
+# from ..gamego import crapup
 from ..mud.world import World
 
 
@@ -23,7 +23,6 @@ from ..mud.world import World
 # include <sys/file.h>
 
 # extern FILE * openlock();
-# extern long curch;
 # extern long my_str;
 # extern long my_sex;
 # extern long my_lev;
@@ -33,7 +32,6 @@ from ..mud.world import World
 # extern char * oname();
 # extern long ppos();
 # extern char key_buff[];
-# long curch=0;
 
 # long  curmode=0;
 # long  meall=0;
@@ -284,13 +282,8 @@ def talker(user):
     # FILE *fl;
     # char string[128];
     world = World()
-    if not world.openworld():
-        crapup("Sorry AberMUD is currently unavailable")
     user.cms = -1
     user.putmeon(world)
-    if user.mynum >= world.maxu:
-        print("\nSorry AberMUD is full at the moment")
-        return 0
     user.rte()
     world.closeworld()
     user.cms = -1
@@ -304,6 +297,7 @@ def talker(user):
         user.buff.rd_qd = False
         world.closeworld()
         user.buff.pbfr()
+        break
     logger().debug("<<< talker(%s)" % (user, ))
 
 
@@ -328,7 +322,7 @@ def cleanup(inpbk):
     """
 
 
-def special(string, name):
+def special(cmd, user):
     """
  char *string,*name;
     {
@@ -609,9 +603,6 @@ def loodrv():
     lookin(curch);
     }
     """
-
-
-# long iamon=0;
 
 
 def userwrap():

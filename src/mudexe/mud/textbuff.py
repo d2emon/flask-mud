@@ -12,5 +12,5 @@ class TextBuffer():
         logger().debug("<<< makebfr()")
 
     # ???
-    def pbfr():
+    def pbfr(self):
         logger().debug("<<< pbfr()")
