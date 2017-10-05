@@ -40,7 +40,7 @@ def play(username=None, **kwargs):
     #   topscr()
     user = User(username)
     print("Hello %s" % (user.fullname))
-    logger().info("GAME ENTRY: %s[%s]", user.fullname, user.cuserid(None))
+    logger().info("GAME ENTRY: %s[%s]", user.fullname, user.cuserid())
     talker(user)
 
     sig_ctrlc()

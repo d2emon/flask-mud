@@ -33,7 +33,6 @@ from ..mud.world import World
 # extern long ppos();
 # extern char key_buff[];
 
-# long  curmode=0;
 # long  meall=0;
 
 """
@@ -192,8 +191,6 @@ def send2(block):
 
 
 # FILE *fl_com;
-# extern long findstart();
-# extern long findend();
 
 
 def openlock(f, perm):
@@ -269,52 +266,20 @@ def cleanup(inpbk):
 
 
 def special(cmd, user):
-    """
- char *string,*name;
-    {
-    extern long curmode;
-    char ch,bk[128];
-    extern long curch,moni;
-    extern long mynum;
-    extern long my_str,my_lev,my_sco,my_sex;
-    FILE * ufl;
-    char xx[128];
-    char xy[128];
-    char us[32];
-    strcpy(bk,string);
-    lowercase(bk);
-    ch= *bk;
-    if (ch!='.') return(0);
-    ch=bk[1];
-    switch(ch)
-       {
-       case 'g':
-          curmode=1;
-          curch= -5;
-          initme();
-          ufl=openworld();
-          setpstr(mynum,my_str);
-          setplev(mynum,my_lev);
- if(my_lev<10000) setpvis(mynum,0);
-    else setpvis(mynum,10000);
-          setpwpn(mynum,-1);
-          setpsexall(mynum,my_sex);
-          setphelping(mynum,-1);
-          cuserid(us);
-          sprintf(xy,"\001s%s\001%s  has entered the game\n\001",name,name);
-          sprintf(xx,"\001s%s\001[ %s  has entered the game ]\n\001",name,name);
-          sendsys(name,name,-10113,curch,xx);
-          rte(name);
-          if(randperc()>50)trapch(-5);
-else{curch= -183;trapch(-183);}
-sendsys(name,name,-10000,curch,xy);
-          break;
-       default:
-          printf("\nUnknown . option\n");
-          }
-    return(1);
-    }
-    """
+    # char ch,bk[128];
+    # extern long curch,moni;
+    # extern long mynum;
+    # extern long my_str,my_lev,my_sco,my_sex;
+    # FILE * ufl;
+    bk = cmd.lower()
+    if bk[0] != '.':
+        return 0
+    ch = bk[1:]
+    if ch == 'g':
+        user.start_game()
+    else:
+        print("\nUnknown . option")
+    return 1
 
 
 # long dsdb=0;
@@ -374,50 +339,6 @@ if(!strcmp(lowercase(nam1+4),lowercase(luser))) return(1);
     """
 
 
-def trapch(chan):
-    """
- long chan;
-    {
-extern long curch;
-    extern long mynum;
-    FILE *unit;
-    extern long my_lev;
-    if(my_lev>9) goto ndie;
-    ndie:unit=openworld();
-    setploc(mynum,chan);
-    lookin(chan);
-    }
-    """
-
-
-def loseme(name):
-    """
- char *name;
-    {
-extern long iamon;
-extern long mynum;
-extern long zapped;
-char bk[128];
-extern char globme[];
-FILE *unit;
-sig_aloff(); /* No interruptions while you are busy dying */
-/* ABOUT 2 MINUTES OR SO */
-i_setup=0;
-
-unit=openworld();
-dumpitems();
-if(pvis(mynum)<10000) {
-sprintf(bk,"%s has departed from AberMUDII\n",globme);
-sendsys(globme,globme,-10113,0,bk);
-}
-    pname(mynum)[0]=0;
-closeworld();
-if(!zapped) saveme();
-chksnp();
-    }
-    """
-
-
 def revise(cutoff):
     """
  long cutoff;
@@ -438,74 +359,6 @@ def revise(cutoff):
           }
        ct++;
        }
-    }
-    """
-
-
-def lookin(room):
-    """
- long room; /* Lords ???? */
-    {
-    extern char globme[];
-    FILE *un1,un2;
-    char str[128];
-    long xxx;
-    extern long brmode;
-    extern long curmode;
-    extern long ail_blind;
-    long ct;
-    extern long my_lev;
-    closeworld();
-    if(ail_blind)
-    {
-        bprintf("You are blind... you can't see a thing!\n");
-    }
-    if(my_lev>9) showname(room);
-    un1=openroom(room,"r");
-    if (un1!=NULL)
-    {
-xx1:   xxx=0;
-       lodex(un1);
-       if(isdark())
-       {
-           fclose(un1);
-           bprintf("It is dark\n");
-           openworld();
-           onlook();
-           return;
-        }
-       while(getstr(un1,str)!=0)
-          {
-          if(!strcmp(str,"#DIE"))
-             {
-             if(ail_blind) {rewind(un1);ail_blind=0;goto xx1;}
-             if(my_lev>9)bprintf("<DEATH ROOM>\n");
-             else
-                {
-                loseme(globme);
-                crapup("bye bye.....\n");
-                }
-             }
-          else
-{
-if(!strcmp(str,"#NOBR")) brmode=0;
-else
-             if((!ail_blind)&&(!xxx))bprintf("%s\n",str);
-          xxx=brmode;
-}
-          }
-       }
-    else
-       bprintf("\nYou are on channel %d\n",room);
-    fclose(un1);
-    openworld();
-    if(!ail_blind)
-    {
-        lisobs();
-        if(curmode==1) lispeople();
-    }
-    bprintf("\n");
-    onlook();
     }
     """
 
