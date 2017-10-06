@@ -1,27 +1,41 @@
 from global_vars import logger
+from ..gamego.signals import alarm
+
+
+class Snoop():
+    def __init__(self, player, per="a"):
+        self.fln = self.opensnoop(player, per)
+
+    def opensnoop(self, player, per="a"):
+        # f = "%s%s" % (SNOOP, player.name)
+        # return openlock(f, per)
+        return 0
+
+    def closesnoop(self):
+        logger().debug("<<< fcloselock(%s)" % (self))
 
 
 class TextBuffer():
     # ???
     rd_qd = False
-    # ???
-    pr_due = False
 
     def __init__(self):
         self.log_fl = None  # 0 = not logging
         self.pr_qcr = False
+        self.pr_due = False
         self.iskb = True
-        self.snoopd = -1
-        self.snoopt = -1
+        self.snoopd = None
+        self.snoopt = None
+        self.sntn = None
 
         self.makebfr()
 
     def makebfr(self):
         self.sysbuf = ""
 
-    def pbfr(self):
-        # block_alarm();
-        # closeworld();
+    def pbfr(self, user):
+        alarm.block_alarm()
+        user.world.closeworld()
         if len(self.sysbuf):
             self.pr_due = True
 
@@ -32,20 +46,19 @@ class TextBuffer():
         self.pr_qcr = False
         if self.log_fl is not None:
             self.iskb = False
-            dcprnt(self.sysbuf, self.log_fl)
-        if self.snoopd != -1:
-            # fln = opensnoop(pname(snoopd), "a")
-            fln = opensnoop(self.snoopd, "a")
-            if fln > 0:
+            self.dcprnt(f=self.log_fl)
+        if self.snoopd is not None:
+            sn = Snoop(self.snoopd)
+            if sn.fln > 0:
                 self.iskb = False
-                # dcprnt(sysbuf, fln)
-                # fcloselock(fln)
+                self.dcprnt(f=sn.fln)
+                sn.closesnoop()
         self.iskb = True
-        # dcprnt(sysbuf, stdout)
+        self.dcprnt()
         self.sysbuf = ""  # clear buffer
-        if self.snoopt != -1:
+        if self.snoopt is not None:
             self.viewsnoop()
-        # unblock_alarm();
+        alarm.unblock_alarm()
 
     def bprintf(self, msg):
         if len(msg) > 235:
@@ -62,11 +75,11 @@ class TextBuffer():
             # crapup("PANIC - Buffer overflow")
         self.sysbuf += msg
 
-    def viewsnoop(self):
-        fx = opensnoop("globme", "r+")
-        if self.snoopt == -1:
+    def viewsnoop(self, user):
+        sn = Snoop(user.player, "r+")
+        if self.snoopt is None:
             return
-        if fx == 0:
+        if sn.fln == 0:
             return
         # while not feof(fx) and fgets(z, 127, fx):
         #     print("|%s" % (z))
@@ -74,57 +87,63 @@ class TextBuffer():
         # fcloselock(fx)
 
         # x = self.snoopt
-        # self.snoopt = -1
+        # self.snoopt = None
         # # self.pbfr()
         # self.snoopt = x
 
+    def dcprnt(self, text=None, f=None):
+        """
+        The main loop
+        ct = 0
+        while s[ct]:
+            if s[ct] != '\001':
+                fputc(s[ct], f)
+                ct += 1
+                continue
+            ct += 1
+            c = s[ct]
+            ct += 1
+            if c == 'f':
+                ct = pfile(s, ct, f)
+                continue
+            elif c == 'd':
+                ct = pndeaf(s, ct, f)
+                continue
+            elif c == 's':
+                ct = pcansee(s, ct, f)
+                continue
+            elif c == 'p':
+                ct = prname(s, ct, f)
+                continue
+            elif c == 'c':
+                ct = pndark(s, ct, f)
+                continue
+            elif c == 'P':
+                ct = ppndeaf(s, ct, f)
+                continue
+            elif c == 'D':
+                ct = ppnblind(s, ct, f)
+                continue
+            elif c == 'l':
+                ct = pnotkb(s, ct, f)
+                continue
+            else:
+                s = ""
+                loseme()
+                crapup("Internal $ control sequence error\n")
+        """
+        if text is None:
+            text = self.sysbuf
+        if f is None:
+            print(text)
+        else:
+            print("%s:\t%s" % (f, text))
 
-"""
-#include "files.h"
-#include <stdio.h>
-#include "System.h"
-"""
-
-# long pr_due=0;
-
-
-# The main loop
-def dcprnt(stri, f):
-    """
- char *str;
- FILE *file;
-    {
-    long ct;
-    ct=0;
-    while(str[ct])
-       {
-       if(str[ct]!='\001'){fputc(str[ct++],file);continue;}
-       ct++;
-       switch(str[ct++])
-          {
-          case 'f':
-             ct=pfile(str,ct,file);continue;
-          case 'd':
-             ct=pndeaf(str,ct,file);continue;
-          case 's':
-             ct=pcansee(str,ct,file);continue;
-          case 'p':
-             ct=prname(str,ct,file);continue;
-          case 'c':
-             ct=pndark(str,ct,file);continue;
-          case 'P':
-             ct=ppndeaf(str,ct,file);continue;
-          case 'D':
-             ct=ppnblind(str,ct,file);continue;
-          case 'l':
-             ct=pnotkb(str,ct,file);continue;
-          default:
-             strcpy(str,"");
-             loseme();crapup("Internal $ control sequence error\n");
-             }
-       }
-    }
-    """
+    def chksnp(self, sntn, user):
+        self.sntn = sntn
+        if self.snoopt is None:
+            return
+        self.sntn.sendsys(user, -400, 0)
 
 
 def pfile(stri, ct, f):
@@ -314,16 +333,6 @@ int pnotkb(str,ct,file)
 """
 
 
-def opensnoop(user, per):
-    # z = "%s%s" % (SNOOP, user)
-    # x = openlock(z, per)
-    # return x
-    return 0
-
-
-# char sntn[32];
-
-
 def snoopcom():
     """
     {
@@ -367,27 +376,17 @@ def snoopcom():
     """
 
 
-def chksnp():
-    """
-{
-if(snoopt==-1) return;
-sendsys(sntn,globme,-400,0,"");
-}
-    """
-
-
 def setname(x):
     """
     /* Assign Him her etc according to who it is */
-long x;
-{
-	if((x>15)&&(x!=fpbns("riatha"))&&(x!=fpbns("shazareth")))
-	{
-		strcpy(wd_it,pname(x));
-		return;
-	}
-	if(psex(x)) strcpy(wd_her,pname(x));
-	else strcpy(wd_him,pname(x));
-	strcpy(wd_them,pname(x));
-}
-"""
+    long x;
+    {
+    if((x>15)&&(x!=fpbns("riatha"))&&(x!=fpbns("shazareth")))
+    {
+        strcpy(wd_it,pname(x));
+        return;
+    }
+    if(psex(x)) strcpy(wd_her,pname(x));
+    else strcpy(wd_him,pname(x));
+    strcpy(wd_them,pname(x));
+    """

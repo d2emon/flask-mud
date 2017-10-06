@@ -25,21 +25,16 @@ def special(cmd, user):
 
 
 class Terminal():
-    # ???
-    tty = 4
-    # ???
-    pr_qcr = False
-    # ???
-    pr_due = False
-
     def __init__(self, *args):
         self.args = [a for a in args]
+        self.tty = 4  # 0
         self.pr_bf = ""
         self.key_buff = ""
         self.key_mode = -1
 
         # Buffer
         self.buff = None
+        self.user = None
 
         # self.tty = 0
         # if self.tty == 4:
@@ -47,17 +42,24 @@ class Terminal():
         #     self.initscr()
         #     self.topscr()
 
+    def set_user(self, user):
+        self.user = user
+        self.buff = user.buff
+
     @property
     def title(self):
         return self.args[0]
 
-    # ???
-    def btmscr(self):
-        logger().debug("<<< btmscr()")
+    def initscr(self):
+        pass
 
-    # ???
+    def btmscr(self):
+        print("\\", "=" * 100, "/")
+        pass
+
     def topscr(self):
-        logger().debug("<<< topscr()")
+        print("/", "=" * 100, "\\")
+        pass
 
     def show_top(self):
         self.pbfr()
@@ -87,26 +89,26 @@ class Terminal():
         print(self.title)
 
     # ???
-    def key_input(self, prmpt, l):
+    def key_input(self, prmpt, max_len):
         self.key_mode = 0
         self.pr_bf = prmpt
-        self.buff.bprintf(prmpt)
+        self.bprintf(prmpt)
         self.pbfr()
-        self.pr_due = False
-        self.key_buff = input(prmpt)[:l]
+        self.buff.pr_due = False
+        self.key_buff = input(prmpt)[:max_len]
         self.key_mode = -1
         return self.key_buff
 
-    def key_reprint(self, buff):
-        self.pr_qcr = True
+    def key_reprint(self):
+        self.buff.pr_qcr = True
         self.pbfr()
         if self.key_mode == 0 and self.pr_due:
             print("\n%s%s" % (self.pr_bf, self.key_buff))
-        self.pr_due = 0
+        self.buff.pr_due = 0
         # fflush(stdout)
 
     def pbfr(self):
-        self.buff.pbfr()
+        self.buff.pbfr(self.user)
 
     def bprintf(self, text):
         self.buff.sysbuf += text
@@ -114,11 +116,14 @@ class Terminal():
     def crapup(self, s):
         dashes = "\n-" + "=-" * 38
         self.pbfr()
-        self.pr_due = 0  # So we dont get a prompt after the exit
+        self.buff.pr_due = 0  # So we dont get a prompt after the exit
         print("%s\n\n%s\n%s" % (dashes, s, dashes))
         exit(0)
 
-    def sendmsg(self, user):
+    def sendmsg(self, user=None):
+        if user is None:
+            user = self.user
+
         # Bottom screen
         self.show_bottom()
 

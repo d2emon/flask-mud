@@ -44,29 +44,22 @@ class Alarm():
         signal(SIGALRM, SIG_IGN)
         self.alarm(2147487643)
 
+    def unblock_alarm(self):
+        signal(SIGALRM, occur)
+        if self.active:
+            self.alarm(2)
+
+    def block_alarm(self):
+        signal(SIGALRM, SIG_IGN)
+
 
 alarm = Alarm()
-
-
-"""
-unblock_alarm()
-{
-extern int sig_occur();
-signal(SIGALRM,sig_occur);
-if(sig_active) alarm(2);
-}
-
-block_alarm()
-{
-signal(SIGALRM,SIG_IGN);
-}
-"""
 
 
 def signal(sig_id, sig):
     global __signals
     __signals[sig_id] = sig
-    logger().debug("<<< signal(%d, %s)", sig_id, sig)
+    # logger().debug("<<< signal(%d, %s)", sig_id, sig)
 
 
 def sig_init():
@@ -87,5 +80,5 @@ def do_signal(sig_id, user):
         return
     alarm.sig_aloff()
     res = s(user, active=active)
-    alarm.sig_alon(occur)
+    alarm.sig_alon()
     return res

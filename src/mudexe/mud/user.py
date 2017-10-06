@@ -31,11 +31,6 @@ def onlook():
     logger().debug("<<< onlook()")
 
 
-# ???
-def chksnp():
-    logger().debug("<<< chksnoop()")
-
-
 class PlayerData():
     def load(self, ct):
         self.ct = ct
@@ -92,7 +87,7 @@ class User():
         self.player = PlayerData()
         self.buff = TextBuffer()
         self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
-        self.terminal.buff = self.buff
+        self.terminal.set_user(self)
         self.world = None
 
     @property
@@ -248,7 +243,9 @@ class User():
         self.world.closeworld()
         if not self.zapped:
             self.saveme()
-        chksnp()
+
+        sntn = self
+        self.buff.chksnp(sntn, self)
 
     def deathroom(self):
         if self.my_lev > 9:
@@ -297,13 +294,13 @@ class User():
             return "tss %s" % (work)
 
     def do_loop(self):
-        self.buff.pbfr()
+        self.buff.pbfr(self)
         self.terminal.sendmsg(self)
         if self.buff.rd_qd:
             self.rte()
         self.buff.rd_qd = False
         self.world.closeworld()
-        self.buff.pbfr()
+        self.buff.pbfr(self)
 
     def next_turn(self):
         self.world.openworld()
