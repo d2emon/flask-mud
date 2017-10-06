@@ -1,8 +1,8 @@
 from global_vars import logger
-from ..gamego import crapup
 from ..gamego.signals import alarm
 from .textbuff import TextBuffer
 from .room import Room
+from .tty import Terminal
 
 
 # ???
@@ -73,7 +73,11 @@ class User():
     # ???
     zapped = False
     # ???
-    in_fight = False
+    in_fight = 0
+    # ???
+    fighting = None
+    # ???
+    convflg = 0
 
     def __init__(self, name):
         self.name = name  # globme
@@ -87,6 +91,8 @@ class User():
         # Other
         self.player = PlayerData()
         self.buff = TextBuffer()
+        self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
+        self.terminal.buff = self.buff
         self.world = None
 
     @property
@@ -106,7 +112,7 @@ class User():
         world.openworld()
         f = False
         if self.fpbn() is not None:
-            crapup("You are already on the system - you may only be on once at a time")
+            self.terminal.crapup("You are already on the system - you may only be on once at a time")
         self.mynum = world.find_empty(self.player)
         self.world = world
 
@@ -249,4 +255,43 @@ class User():
             self.buff.bprintf("<DEATH ROOM>\n")
         else:
             self.loseme()
-            crapup("bye bye.....\n")
+            self.terminal.crapup("bye bye.....\n")
+
+    @property
+    def prmpt(self):
+        prmpt = ""
+        if self.debug_mode:
+            prmpt += "#"
+        if self.my_lev > 9:
+            prmpt += "----"
+        if self.convflg == 0:
+            prmpt += ">"
+        elif self.convflg == 1:
+            prmpt += "\""
+        elif self.convflg == 2:
+            prmpt += "*"
+        else:
+            prmpt += "?"
+        if self.player.vis:
+            prmpt = "(%s)" % prmpt
+        return "\r" + prmpt
+
+    def fight_next_round(self):
+        if self.fighting:
+            f = self.world.player[self.fighting]
+            if f is None:
+                self.in_fight = 0
+                self.fighting = None
+            elif f.loc != self.curch:
+                self.in_fight = 0
+                self.fighting = None
+        if self.in_fight:
+            self.in_fight -= 1
+
+    def apply_convflg(self, work):
+        if not self.convflg:
+            return work
+        if self.convflg == 1:
+            return "say %s" % (work)
+        else:
+            return "tss %s" % (work)

@@ -14,7 +14,7 @@ class Room():
 
     # ???
     def openroom(self, mode="r"):
-        logger().debug("<<< openroom(%d, %s)", self, mode)
+        logger().debug("<<< openroom(%s, %s)", self, mode)
         return None
 
     # ???

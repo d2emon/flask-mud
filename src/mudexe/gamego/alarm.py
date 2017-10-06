@@ -1,6 +1,3 @@
-from . import crapup
-
-
 interrupt = False
 
 
@@ -14,7 +11,7 @@ def occur(user, active=False):
     interrupt = False
     # on_timing()
     user.world.closeworld()
-    # key_reprint()
+    user.terminal.key_reprint()
 
 
 def ctrlc(user, active=False):
@@ -22,7 +19,7 @@ def ctrlc(user, active=False):
     if user.in_fight:
         return
     user.loseme()
-    crapup("Byeeeeeeeeee  ...........")
+    user.terminal.crapup("Byeeeeeeeeee  ...........")
 
 
 def oops(user, active=False):

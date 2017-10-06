@@ -7,9 +7,9 @@ are (C) 1987/88  Alan Cox,Jim Finnis,Richard Acott
 
 This file holds the basic communications routines
 """
-from global_vars import logger
-# from ..gamego import crapup
+# from global_vars import logger
 from ..mud.world import World
+from ..mud.tty import special
 
 
 # include "files.h"
@@ -31,7 +31,6 @@ from ..mud.world import World
 # extern char * pname();
 # extern char * oname();
 # extern long ppos();
-# extern char key_buff[];
 
 # long  meall=0;
 
@@ -70,103 +69,6 @@ long offd,offs,len;
 
 # long gurum=0;
 # long convflg=0;
-
-
-def sendmsg(name):
-    """
- char *name;
-    {
-    extern long debug_mode;
-    extern char *sysbuf;
-    extern long curch,moni,mynum;
-    char prmpt[32];
-    long a;
-extern long tty;
-    char work[200];
-    long w2[35];
-    extern char key_buff[];
-    extern long convflg;
-    extern long my_lev;
-extern long my_str;
-extern long in_fight;
-extern long fighting;
-    extern long curmode;
-    l:pbfr();
-if(tty==4) btmscr();
-strcpy(prmpt,"\r");
-    if(pvis(mynum)) strcat(prmpt,"(");
-    if(debug_mode) strcat(prmpt,"#");
-    if(my_lev>9)strcat(prmpt,"----");
-    switch(convflg)
-       {
-       case 0:
-          strcat(prmpt,">");
-          break;
-       case 1:
-          strcat(prmpt,"\"");
-          break;
-       case 2:
-          strcat(prmpt,"*");
-          break;
-       default:
-          strcat(prmpt,"?");
-          }
-    if(pvis(mynum)) strcat(prmpt,")");
-    pbfr();
-    if(pvis(mynum)>9999) set_progname(0,"-csh");
-    else
-    sprintf(work,"   --}----- ABERMUD -----{--     Playing as %s",name);
-    if(pvis(mynum)==0) set_progname(0,work);
-    sig_alon();
-    key_input(prmpt,80);
-    sig_aloff();
-    strcpy(work,key_buff);
-if(tty==4) topscr();
-strcat(sysbuf,"\001l");
-strcat(sysbuf,work);
-strcat(sysbuf,"\n\001");
-openworld();
-rte(name);
-closeworld();
-    if((convflg)&&(!strcmp(work,"**")))
-       {
-       convflg=0;
-       goto l;
-       }
-    if(!strlen(work)) goto nadj;
-if((strcmp(work,"*"))&&(work[0]=='*')){(work[0]=32);goto nadj;}
-    if(convflg)
-       {
-       strcpy(w2,work);
-       if(convflg==1) sprintf(work,"say %s",w2);
-       else
-          sprintf(work,"tss %s",w2);
-       }
-    nadj:if(curmode==1) gamecom(work);
-    else
-       {
-       if(((strcmp(work,".Q"))&&(strcmp(work,".q")))&& (!!strlen(work)))
-          {
-          a=special(work,name);
-          }
-       }
-if(fighting>-1)
-{
-if(!strlen(pname(fighting)))
-{
-in_fight=0;
-fighting= -1;
-}
-if(ploc(fighting)!=curch)
-{
-in_fight=0;
-fighting= -1;
-}
-}
-if(in_fight) in_fight-=1;
-    return((!strcmp(work,".Q"))||(!strcmp(work,".q")));
-    }
-    """
 
 
 def send2(block):
@@ -221,27 +123,22 @@ intr:if(flock(fileno(unit),LOCK_EX)== -1)
 
 
 def talker(user):
-    # extern long curch,cms;
-    # FILE *fl;
-    # char string[128];
-    world = World()
     user.cms = -1
-    user.putmeon(world)
+    user.putmeon(World())
     user.rte()
-    world.closeworld()
+    user.world.closeworld()
     user.cms = -1
     special(".g", user)
     user.i_setup = True
-    while True:
-        user.buff.pbfr()
-        sendmsg(user)
-        if user.buff.rd_qd:
+    # while True:
+    for i in range(5):
+        user.terminal.pbfr()
+        user.terminal.sendmsg(user)
+        if user.terminal.buff.rd_qd:
             user.rte()
-        user.buff.rd_qd = False
-        world.closeworld()
-        user.buff.pbfr()
-        break
-    logger().debug("<<< talker(%s)" % (user, ))
+        user.terminal.buff.rd_qd = False
+        user.world.closeworld()
+        user.terminal.pbfr()
 
 
 def cleanup(inpbk):
@@ -263,23 +160,6 @@ def cleanup(inpbk):
     revise(inpbk[0]);
     }
     """
-
-
-def special(cmd, user):
-    # char ch,bk[128];
-    # extern long curch,moni;
-    # extern long mynum;
-    # extern long my_str,my_lev,my_sco,my_sex;
-    # FILE * ufl;
-    bk = cmd.lower()
-    if bk[0] != '.':
-        return 0
-    ch = bk[1:]
-    if ch == 'g':
-        user.start_game()
-    else:
-        print("\nUnknown . option")
-    return 1
 
 
 # long dsdb=0;
