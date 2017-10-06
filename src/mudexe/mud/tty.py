@@ -54,12 +54,16 @@ class Terminal():
         pass
 
     def btmscr(self):
-        print("\\", "=" * 100, "/")
-        pass
+        c_start = chr(int("2517", 16))
+        c_fill = chr(int("2501", 16))
+        c_finish = chr(int("251B", 16))
+        print(c_start + c_fill * 100 + c_finish)
 
     def topscr(self):
-        print("/", "=" * 100, "\\")
-        pass
+        c_start = chr(int("250F", 16))
+        c_fill = chr(int("2501", 16))
+        c_finish = chr(int("2513", 16))
+        print(c_start + c_fill * 100 + c_finish)
 
     def show_top(self):
         self.pbfr()
@@ -86,7 +90,8 @@ class Terminal():
         strcpy(argv_p[n],text);
         """
         self.args[p_id] = title
-        print(self.title)
+        border = chr(int("2503", 16))
+        print(border + "\t" + self.title + "\t" + border)
 
     # ???
     def key_input(self, prmpt, max_len):

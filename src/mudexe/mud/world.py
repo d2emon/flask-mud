@@ -1,7 +1,7 @@
 """
 Fast File Controller v0.1
 """
-from global_vars import logger
+# from global_vars import logger
 # from blib import sec_read, sec_write
 
 
@@ -51,6 +51,8 @@ class World():
         self.obj_start = 400
         self.obj_len = 4
         self.obj_count = self.numobs
+        self.msg_len = 128
+        self.msg_count = 1
 
     def openworld(self):
         print("G" + "<" * 150 + "DB")
@@ -105,26 +107,25 @@ class World():
         raise MudFull()
 
     def findstart(self):
-        """
-    long bk[2];
-    sec_read(unit,bk,0,1);
-    return(bk[0]);
-        """
-        logger().debug("<<< findstart()")
         return 0
+        # sec_read(self.filrf, bk, 0, 1)
+        # return bk[0]
 
     def findend(self):
-        """
-    long bk[3];
-    sec_read(unit,bk,0,2);
-    return(bk[1]);
-        """
-        logger().debug("<<< findend()")
-        return 0
+        return 10
+        # sec_read(self.filrf, bk, 0, 2)
+        # return bk[1]
 
     def readmsg(self, num):
-        # long buff[64],actnum;
-        # sec_read(channel,buff,0,64);
-        # actnum = num * 2 - buff[0]
-        # sec_read(channel,block,actnum,128);
+        # sec_read(self.filrf, buff, 0, 64)
+        # start = buff[0]
+        # actnum = num * 2 - start
+        """
+        sec_read(
+            self.filrf,
+            buff,
+            actnum,
+            self.msg_len * self.msg_count
+        )
+        """
         return MudMessage(-5000, "Test")
