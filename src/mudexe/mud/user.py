@@ -1,6 +1,8 @@
 from global_vars import logger
 from ..gamego import crapup
+from ..gamego.signals import alarm
 from .textbuff import TextBuffer
+from .room import Room
 
 
 # ???
@@ -22,6 +24,16 @@ def initme():
 def randperc():
     logger().debug("<<< randperc()")
     return 25
+
+
+# ???
+def onlook():
+    logger().debug("<<< onlook()")
+
+
+# ???
+def chksnp():
+    logger().debug("<<< chksnoop()")
 
 
 class PlayerData():
@@ -52,6 +64,16 @@ class User():
     my_lev = 0
     # ???
     my_sex = 0
+    # ???
+    ail_blind = False
+    # ???
+    curmode = False
+    # ???
+    brmode = False
+    # ???
+    zapped = False
+    # ???
+    in_fight = False
 
     def __init__(self, name):
         self.name = name  # globme
@@ -158,8 +180,8 @@ class User():
         self.player.sexall = self.my_sex
         self.player.helping = -1
         us = self.cuserid()
-        xy = "\001s%s\001%s  has entered the game\n\001" % (self.name, self.name)
-        xx = "\001s%s\001[ %s  has entered the game ]\n\001" % (self.name, self.name)
+        xy = "<s user=\"%s\">%s  has entered the game\n</s>" % (self.name, self.name)
+        xx = "<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (self.name, self.name)
         self.sendsys(self, -10113, text=xx)
         self.rte()
         if randperc() > 50:
@@ -176,97 +198,55 @@ class User():
             channel = self.curch
         logger().debug("<<< sendsys(%s, %s, %s, %s, %s)", self, to_user, msg_code, channel, text)
 
+    # ???
+    def dumpitems(self):
+        logger().debug("<<< dumpitems()")
+
+    # ???
+    def saveme(self):
+        logger().debug("<<< saveme()")
+
     def trapch(self, chan):
         self.world.openworld()
         self.player.loc = chan
         self.lookin()
 
     def lookin(self, room=None):
+        """
+        Lords ????
+        """
         if room is None:
             room = self.curch
-        """
- long room; /* Lords ???? */
-    {
-    extern char globme[];
-    FILE *un1,un2;
-    char str[128];
-    long xxx;
-    extern long brmode;
-    extern long curmode;
-    extern long ail_blind;
-    long ct;
-    extern long my_lev;
-    closeworld();
-    if(ail_blind)
-    {
-        bprintf("You are blind... you can't see a thing!\n");
-    }
-    if(my_lev>9) showname(room);
-    un1=openroom(room,"r");
-    if (un1!=NULL)
-    {
-xx1:   xxx=0;
-       lodex(un1);
-       if(isdark())
-       {
-           fclose(un1);
-           bprintf("It is dark\n");
-           openworld();
-           onlook();
-           return;
-        }
-       while(getstr(un1,str)!=0)
-          {
-          if(!strcmp(str,"#DIE"))
-             {
-             if(ail_blind) {rewind(un1);ail_blind=0;goto xx1;}
-             if(my_lev>9)bprintf("<DEATH ROOM>\n");
-             else
-                {
-                loseme(globme);
-                crapup("bye bye.....\n");
-                }
-             }
-          else
-{
-if(!strcmp(str,"#NOBR")) brmode=0;
-else
-             if((!ail_blind)&&(!xxx))bprintf("%s\n",str);
-          xxx=brmode;
-}
-          }
-       }
-    else
-       bprintf("\nYou are on channel %d\n",room);
-    fclose(un1);
-    openworld();
-    if(!ail_blind)
-    {
-        lisobs();
-        if(curmode==1) lispeople();
-    }
-    bprintf("\n");
-    onlook();
-    }
-        """
+        self.world.closeworld()
+        r = Room(room)
+        if self.ail_blind:
+            self.buff.bprintf("You are blind... you can't see a thing!\n")
+        if self.my_lev > 9:
+            self.buff.bprintf(r.showname())
+        self.buff.bprintf(r.look(self))
+        self.buff.bprintf("\n")
+        if r.deathroom:
+            self.deathroom()
+        onlook()
 
     def loseme(self):
-        # extern long iamon;
-        # extern long mynum;
-        # extern long zapped;
-        # char bk[128];
-        # extern char globme[];
-        # FILE *unit;
-        # sig_aloff()  # No interruptions while you are busy dying
+        alarm.sig_aloff()  # No interruptions while you are busy dying
         # ABOUT 2 MINUTES OR SO
         self.i_setup = False
         self.world.openworld()
-        # dumpitems()
+        self.dumpitems()
         if self.player.vis < 10000:
             bk = "%s has departed from AberMUDII\n" % (self.name)
             self.sendsys(self, -10113, 0, bk)
         self.world.players[self.mynum] = None
-        self.world.close()
-        # if not zapped:
-        #     saveme()
-        # chksnp()
+        self.world.closeworld()
+        if not self.zapped:
+            self.saveme()
+        chksnp()
+
+    def deathroom(self):
+        if self.my_lev > 9:
+            self.buff.bprintf("<DEATH ROOM>\n")
+        else:
+            self.loseme()
+            crapup("bye bye.....\n")

@@ -8,7 +8,7 @@ from global_vars import logger
 from mudexe.mud.user import User
 
 
-from mudexe.gamego.signals import sig_init, sig_ctrlc
+from mudexe.gamego.signals import do_signal, SIGALRM, SIGTERM, sig_init
 from mudexe.talker import talker
 
 
@@ -43,4 +43,5 @@ def play(username=None, **kwargs):
     logger().info("GAME ENTRY: %s[%s]", user.fullname, user.cuserid())
     talker(user)
 
-    sig_ctrlc()
+    do_signal(SIGALRM, user)
+    do_signal(SIGTERM, user)

@@ -1,5 +1,6 @@
 from global_vars import logger
-from . import crapup
+# from . import crapup
+from .alarm import occur, ctrlc, oops
 
 
 SIGHUP = 0
@@ -23,29 +24,28 @@ __signals = {
     SIGCONT: SIG_IGN,
     SIGALRM: SIG_IGN,
 }
-__timeout = 2
 
 
-def signal(sig_id, sig):
-    global __signals
-    __signals[sig_id] = sig
-    logger().debug("<<< signal(%d, %s)", sig_id, sig)
+class Alarm():
+    timeout = 2
+    active = False
+
+    def alarm(self, t):
+        self.timeout = t
+        logger().debug("<<< alarm(%d)", t)
+
+    def sig_alon(self):
+        self.active = True
+        signal(SIGALRM, occur)
+        self.alarm(2)
+
+    def sig_aloff(self):
+        self.active = False
+        signal(SIGALRM, SIG_IGN)
+        self.alarm(2147487643)
 
 
-def alarm(t):
-    global __timeout
-    __timeout = t
-    logger().debug("<<< alarm(%d)", t)
-
-
-sig_active = False
-
-
-def sig_alon():
-    global sig_active
-    sig_active = True
-    signal(SIGALRM, sig_occur)
-    alarm(2)
+alarm = Alarm()
 
 
 """
@@ -63,52 +63,29 @@ signal(SIGALRM,SIG_IGN);
 """
 
 
-def sig_aloff():
-    global sig_active
-    sig_active = False
-    signal(SIGALRM, SIG_IGN)
-    alarm(2147487643)
-
-
-interrupt = False
-
-
-def sig_occur():
-    # extern char globme[];
-    global interrupt
-    if not sig_active:
-        return
-    sig_aloff()
-    # openworld()
-    interrupt = True
-    # rte(globme)
-    interrupt = False
-    # on_timing()
-    # closeworld()
-    # key_reprint()
-    sig_alon()
+def signal(sig_id, sig):
+    global __signals
+    __signals[sig_id] = sig
+    logger().debug("<<< signal(%d, %s)", sig_id, sig)
 
 
 def sig_init():
-    signal(SIGHUP, sig_oops)
-    signal(SIGINT, sig_ctrlc)
-    signal(SIGTERM, sig_ctrlc)
+    signal(SIGHUP, oops)
+    signal(SIGINT, ctrlc)
+    signal(SIGTERM, ctrlc)
     signal(SIGTSTP, SIG_IGN)
     signal(SIGQUIT, SIG_IGN)
-    signal(SIGCONT, sig_oops)
+    signal(SIGCONT, oops)
 
 
-def sig_oops():
-    sig_aloff()
-    # loseme()
-    exit(255)
-
-
-def sig_ctrlc():
-    # extern in_fight;
-    print("^C")
-    # if in_fight:
-    #     return
-    sig_aloff()
-    # loseme()
-    crapup("Byeeeeeeeeee  ...........")
+def do_signal(sig_id, user):
+    global alarm
+    logger().debug("SIGNAL%s occured", sig_id)
+    active = alarm.active
+    s = __signals.get(sig_id)
+    if s is None:
+        return
+    alarm.sig_aloff()
+    res = s(user, active=active)
+    alarm.sig_alon(occur)
+    return res
