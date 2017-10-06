@@ -295,3 +295,21 @@ class User():
             return "say %s" % (work)
         else:
             return "tss %s" % (work)
+
+    def do_loop(self):
+        self.buff.pbfr()
+        self.terminal.sendmsg(self)
+        if self.buff.rd_qd:
+            self.rte()
+        self.buff.rd_qd = False
+        self.world.closeworld()
+        self.buff.pbfr()
+
+    def next_turn(self):
+        self.world.openworld()
+        interrupt = True
+        self.rte()
+        interrupt = False
+        # on_timing()
+        self.world.closeworld()
+        self.terminal.key_reprint()

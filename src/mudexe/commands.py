@@ -30,5 +30,6 @@ def play(username=None, **kwargs):
     logger().info("GAME ENTRY: %s[%s]", user.fullname, user.cuserid())
     talker(user)
 
-    do_signal(SIGALRM, user)
+    for i in range(5):
+        do_signal(SIGALRM, user)
     do_signal(SIGTERM, user)

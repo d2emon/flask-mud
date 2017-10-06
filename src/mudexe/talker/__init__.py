@@ -132,13 +132,7 @@ def talker(user):
     user.i_setup = True
     # while True:
     for i in range(5):
-        user.terminal.pbfr()
-        user.terminal.sendmsg(user)
-        if user.terminal.buff.rd_qd:
-            user.rte()
-        user.terminal.buff.rd_qd = False
-        user.world.closeworld()
-        user.terminal.pbfr()
+        user.do_loop()
 
 
 def cleanup(inpbk):

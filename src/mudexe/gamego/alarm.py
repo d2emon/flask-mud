@@ -5,13 +5,9 @@ def occur(user, active=False):
     global interrupt
     if not active:
         return
-    user.world.openworld()
     interrupt = True
-    user.rte()
+    user.next_turn()
     interrupt = False
-    # on_timing()
-    user.world.closeworld()
-    user.terminal.key_reprint()
 
 
 def ctrlc(user, active=False):
