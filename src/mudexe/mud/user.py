@@ -54,12 +54,6 @@ class User():
     # ???
     tdes = 0
     # ???
-    my_str = 0
-    # ???
-    my_lev = 0
-    # ???
-    my_sex = 0
-    # ???
     ail_blind = False
     # ???
     curmode = False
@@ -83,6 +77,11 @@ class User():
         self.iamon = False
         self.lasup = 0
         self.curmode = 0
+
+        self.my_str = 0
+        self.my_lev = 0
+        self.my_sex = 0
+        self.my_sco = 0
         # Other
         self.player = PlayerData()
         self.buff = TextBuffer()
@@ -310,3 +309,10 @@ class User():
         # on_timing()
         self.world.closeworld()
         self.terminal.key_reprint()
+
+    def fill_person(self, person):
+        person.name = self.name
+        person.strength = self.my_str
+        person.level = self.my_lev
+        person.sex = self.my_sex
+        person.score = self.my_sco

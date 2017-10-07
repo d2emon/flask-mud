@@ -1,4 +1,20 @@
+from .exceptions import Crapup
+
+
+class UafUnaviable(Crapup):
+    def __init__(self):
+        self.msg = "Cannot access UAF"
+
+
+class FileTimeout(Crapup):
+    def __init__(self):
+        self.msg = "Panic: Timeout event on user file"
+
+
 class Person():
+    PCTL_GET = 0
+    PCTL_FIND = 1
+
     def __init__(self):
         self.name = ""
         self.score = 0
@@ -6,46 +22,63 @@ class Person():
         self.sex = 0
         self.level = 0
 
-    def decpers(self):
-        return self.name, self.strength, self.score, self.level, self.sex
+    @classmethod
+    def openuaf(cls, perm):
+        # f = openlock(UAF_RAND, perm)
+        f = None
+        if f is None:
+            raise UafUnaviable()
+        return f
+        # return cls()
+
+    def fcloselock(self):
+        pass
+
+    @classmethod
+    def personactl(cls, user, d, act):
+        f = cls.openuaf("r+")
+        if user is None:
+            name = ""
+        else:
+            name = user.name.lower()
+        while getperson(f, d):
+            c = d.name.lower()
+            if c == name:
+                if act == cls.PCTL_GET:
+                    f.fcloselock()
+                    return True
+                elif act == cls.PCTL_FIND:
+                    # fseek(a, ftell(a) - sizeof(PERSONA), 0)
+                    return f
+        f.fcloselock()
+        return None
+
+    @classmethod
+    def findpers(cls, user, x):
+        return cls.personactl(user, x, self.PCTL_GET)
+
+    def decpers(self, user):
+        # user.name = self.name
+        user.my_str = self.strength
+        user.my_sco = self.score
+        user.my_lev = self.level
+        user.my-sex = self.sex
+
+    def newpers(self, user):
+        self.score = 0
+        # ???
+        self.strerngth = 40
+        # ???
+        self.level = 1
+        # s, user.my_str, user.my_sco, user.my_lev, user.my_sex = x.decpers()
+        self.decpers(user)
 
 
 """
-#include <errno.h>
-#include <stdio.h>
-#include "files.h"
-
-extern FILE *openuaf();
 extern FILE *openlock();
 extern char *oname();
 extern char *pname();
-
-extern char globme[];
 """
-
-
-PCTL_GET = 0
-PCTL_FIND = 1
-
-
-def personactl(name, d, act):
-    a = openuaf("r+")
-    e = name.lower()
-    while getperson(a, d):
-        c = d.name.lower()
-        if c == e:
-            if act == PCTL_GET:
-                # fcloselock(a)
-                return True
-            elif act == PCTL_FIND:
-                # fseek(a, ftell(a) - sizeof(PERSONA), 0)
-                return a
-    # fcloselock(a)
-    return None
-
-
-def findpers(name, x):
-    return personactl(name, x, PCTL_GET)
 
 
 def delpers(name):
@@ -69,69 +102,31 @@ def delpers(name):
     """
 
 
-def putpers(name, pers):
-    """
-    char *name;
-    PERSONA *pers;
-    {
-    FILE *i;
-    unsigned long flen;
-    PERSONA s;
-    i=(FILE *)personactl(name,&s,PCTL_FIND);
-    if(i==(FILE *)-1)
-    {
-        flen= -1;
-        i=(FILE *)personactl("",&s,PCTL_FIND);
-        if(i!=(FILE *)-1) goto fiok;
-        i=openuaf("a");
-        flen=ftell(i);
-        fiok:
-        if(fwrite(pers,sizeof(PERSONA),1,i)!=1)
-        {
-            bprintf("Save Failed - Device Full ?\n");
-            if(flen!=-1)ftruncate(fileno(i),flen);
-            fcloselock(i);
-            return;
-        }
-        fcloselock(i);
-        return;
-    }
-    fwrite(pers,sizeof(PERSONA),1,i);
-    fcloselock(i);
-    }
-    """
-
-
-def openuaf(perm):
-    """
-    char *perm;
-    {
-    FILE *i;
-    i=openlock(UAF_RAND,perm);
-    if(i==NULL)
-    {
-        crapup("Cannot access UAF\n");
-    }
-    return(i);
-    }
-    """
-
-
-# long my_sco;
-# long my_lev;
-# long my_str;
-# long my_sex;
+def putpers(user, pers):
+    # FILE *i;
+    # unsigned long flen;
+    # PERSONA s;
+    p = Person.personactl(user, s, p.PCTL_FIND)
+    if p is None:
+        flen = -1
+        p = Person.personactl(None, s, p.PCTL_FIND)
+        if p is None:
+            p = Person.openuaf("a")
+            flen = ftell(i)
+        if fwrite(pers, sizeof(PERSONA), 1, p) is not None:
+            user.buff.bprintf("Save Failed - Device Full ?\n")
+            if flen is not None:
+                ftruncate(p, flen)
+            fcloselock(p)
+            return
+        fcloselock(p)
+        return
+    fwrite(pers, sizeof(PERSONA), 1, p)
+    fcloselock(p);
 
 
 def initme(user):
-    def fill_user(person, user):
-        person.name = user.name
-        person.strength = user.my_str
-        person.level = user.my_lev
-        person.sex = user.my_sex
-        person.score = user.my_sco
-
-    def moan1(user, x):
+    def ask_sex(user):
         user.buff.bprintf("\nSex (M/F) : ")
         user.buff.pbfr()
         user.terminal.keysetback()
@@ -144,31 +139,30 @@ def initme(user):
             'f': 1,
         }
         sex = sexes.get(s[0])
-        user.my_sex = sex
         if sex is None:
             user.buff.bprintf("M or F")
-            return moan1(user, x)
-        fill_user(x, user)
-        putpers(user, x)
-        return x
+        return sex
 
     errno = 0
-    x = findpers(user)
+    p = Person()
+    x = p.findpers(user)
     if x is not None:
-        s, user.my_str, user.my_sco, user.my_lev, user.my_sex = x.decpers()
+        # s, user.my_str, user.my_sco, user.my_lev, user.my_sex = x.decpers()
+        x.decpers(user)
         return
+
     if errno != 0:
-        # crapup("Panic: Timeout event on user file\n")
-        pass
-    x.score = 0
-    # ???
-    x.strerngth = 40
-    # ???
-    x.level = 1
+        raise FileTimeout
+
     user.buff.bprintf("Creating character....")
-    # s, user.my_str, user.my_sco, user.my_lev, user.my_sex = x.decpers()
-    s, user.my_str, user.my_sco, user.my_lev, user.my_sex = x.decpers()
-    moan1(user, x)
+    # s, user.my_str, user.my_sco, user.my_lev, user.my_sex = p.newpers()
+    p.newpers(user)
+    user.my_sex = None
+    while user.my_sex is None:
+        user.my_sex = ask_sex(user)
+    user.fill_person(x)
+    putpers(user, x)
+    return x
 
 
 def saveme():
