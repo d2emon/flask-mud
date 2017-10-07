@@ -3,6 +3,7 @@ Key drivers
 """
 from global_vars import logger
 from ..gamego.signals import alarm
+from .exceptions import Crapup
 
 
 # ???
@@ -119,11 +120,7 @@ class Terminal():
         self.buff.sysbuf += text
 
     def crapup(self, s):
-        dashes = "\n-" + "=-" * 38
-        self.pbfr()
-        self.buff.pr_due = 0  # So we dont get a prompt after the exit
-        print("%s\n\n%s\n%s" % (dashes, s, dashes))
-        exit(0)
+        raise Crapup(s, terminal=self)
 
     def sendmsg(self, user=None):
         if user is None:

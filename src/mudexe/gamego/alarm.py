@@ -1,3 +1,6 @@
+from ..mud.exceptions import Crapup
+
+
 interrupt = False
 
 
@@ -15,7 +18,11 @@ def ctrlc(user, active=False):
     if user.in_fight:
         return
     user.loseme()
-    user.terminal.crapup("Byeeeeeeeeee  ...........")
+    try:
+        raise Crapup("Byeeeeeeeeee  ...........", terminal=user.terminal)
+    except Crapup as e:
+        print(e)
+        exit(0)
 
 
 def oops(user, active=False):
