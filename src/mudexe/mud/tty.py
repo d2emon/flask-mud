@@ -169,65 +169,8 @@ class Terminal():
         user.fight_next_round()
         return work.lower() == ".q"
 
-
-save_flag = dict()
-
-
-# ???
-STDIN = 0
-# ???
-ECHO = "ECHO"
-# ???
-ICANON = "ICANON"
-# ???
-TCSANOW = "TCSANOW"
-
-
-# ???
-class Termios():
-    c_lflag = {
-        ECHO: False,
-        ICANON: False,
-    }
-    attrs = {
-        TCSANOW: -1,
-    }
-
-    def tcsetattr(self, f, attr):
-        self.attrs[attr] = f
-
-
-# ???
-def tcgetattr(f):
-    logger().debug("<<< tcgetattr(%s, &ios)", f)
-    return Termios
-
-
-def keysetup():
-    """
-    struct sgttyb x;
-    gtty(fileno(stdin),&x);
-    save_flag=x.sg_flags;
-    x.sg_flags&=~ECHO;
-    x.sg_flags|=CBREAK;
-    stty(fileno(stdin),&x);
-    """
-    global save_flag
-    ios = tcgetattr(STDIN)
-    save_flag = ios.c_lflag
-    ios.c_lflag[ECHO] = True
-    ios.c_lflag[ICANON] = True
-    ios.tcsetattr(STDIN, TCSANOW)
-
-
-def keysetback():
-    """
-    struct sgttyb x;
-    if(save_flag== -1) return;
-    gtty(fileno(stdin),&x);
-    x.sg_flags=save_flag;
-    stty(fileno(stdin),&x);
-    """
-    ios = tcgetattr(STDIN)
-    ios.c_lflag = save_flag
-    ios.tcsetattr(STDIN, TCSANOW)
+    def getkbd(self, l):
+        """
+        Getstr() with length limit and filter ctrl
+        """
+        return input()[:l]

@@ -1,8 +1,15 @@
 from global_vars import logger
 from ..gamego.signals import alarm
+from ..models import Person, SEX_MALE, SEX_FEMALE
 from .textbuff import TextBuffer
 from .room import Room
 from .tty import Terminal
+
+
+sexes = {
+    'm': SEX_MALE,
+    'f': SEX_FEMALE,
+}
 
 
 # ???
@@ -13,11 +20,6 @@ def eorte():
 # ???
 def gamrcv(msg):
     logger().debug("<<< gamrcv(%s)", msg)
-
-
-# ???
-def initme():
-    logger().debug("<<< initme()")
 
 
 # ???
@@ -169,7 +171,7 @@ class User():
     def start_game(self):
         self.curmode = 1
         rooms = [-5, -183]
-        initme()
+        self.initme()
         self.world.openworld()
         self.player.strength = self.my_str
         self.player.lev = self.my_lev
@@ -201,6 +203,28 @@ class User():
     # ???
     def dumpitems(self):
         logger().debug("<<< dumpitems()")
+
+    def initme(self):
+        person = Person.query.by_user(self).first()
+        if person is None:
+            self.buff.bprintf("Creating character....")
+            person = Person()
+            self.my_sex = None
+            while self.my_sex is None:
+                self.buff.bprintf("\nSex (M/F) : ")
+                self.buff.pbfr(self)
+                # self.terminal.keysetback()
+                sex_id = self.terminal.getkbd(1).lower()
+                # self.terminal.keysetup()
+                self.my_sex = sexes.get(sex_id)
+                if self.my_sex is None:
+                    self.buff.bprintf("M or F")
+            self.fill_person(person)
+        person.save()
+
+        # s, user.my_str, user.my_sco, user.my_lev, user.my_sex = p.newpers()
+        person.decpers(self)
+        return person
 
     # ???
     def saveme(self):

@@ -1,7 +1,7 @@
 from flask_script import Manager
 
 
-# from .models import *
+from .models import *
 # from .views import rpg as rpg_blueprint
 from .commands import manager as mudexe_manager
 from global_vars import set_logger

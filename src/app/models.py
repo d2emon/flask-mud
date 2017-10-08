@@ -14,5 +14,5 @@ class PagedQuery(BaseQuery):
             page = int(request.args.get(page_var))
         except (ValueError, TypeError):
             page = 1
-            
+
         return self.paginate(page, app.config.get('RECORDS_ON_PAGE'))
