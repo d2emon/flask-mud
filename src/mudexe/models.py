@@ -54,6 +54,26 @@ class Person(db.Model):
         db.session.commit()
 
 
+class Player(db.Model):
+    """
+    Create a Player model
+    """
+    id = db.Column(db.Integer, primary_key=True)  # ct
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(32), info={'label': "Name"})
+    location = db.Column(db.Integer, default=0, info={'label': "Location"})  # loc
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'))  # pos
+    level = db.Column(db.Integer, default=1, info={'label': "Level"})  # lev
+    visibility = db.Column(db.Integer, default=0, info={'label': "Visibility"})  # vis
+    strength = db.Column(db.Integer, default=-1, info={'label': "Strength"})  # str
+    weapon = db.Column(db.Integer, default=-1, info={'label': "Weapon"})  # wpn
+    helping = db.Column(db.Integer, default=-1, info={'label': "Helping"})  # helping
+    sex = db.Column(db.Integer, default=0, info={'label': "Sex"})
+
+    user = db.relationship('User', backref='players')
+    last_message = db.relationship('Message')
+
+
 class MessageQuery(PagedQuery):
     def findfirst(self):
         '''

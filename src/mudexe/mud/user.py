@@ -1,6 +1,6 @@
 from global_vars import logger
 from ..gamego.signals import alarm
-from ..models import Message, User as UserModel, Person, SEX_MALE, SEX_FEMALE
+from ..models import Message, User as UserModel, Player, Person, SEX_MALE, SEX_FEMALE
 from .textbuff import TextBuffer
 from .room import Room
 from .tty import Terminal
@@ -32,19 +32,6 @@ def randperc():
 # ???
 def onlook():
     logger().debug("<<< onlook()")
-
-
-class PlayerData():
-    def load(self, ct):
-        self.ct = ct
-        self.name = ""
-        self.loc = 0
-        self.pos = -1
-        self.lev = 1
-        self.vis = 0
-        self.strength = -1
-        self.wpn = -1
-        self.sex = 0
 
 
 class User():
@@ -87,7 +74,7 @@ class User():
         self.curmode = 0
 
         # Other
-        self.player = PlayerData()
+        self.player = Player()
         self.buff = TextBuffer()
         self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
         self.terminal.set_user(self)
@@ -100,22 +87,6 @@ class User():
         else:
             return self.name
 
-    @property
-    def my_str(self):
-        return self.model.persons[0].strength
-
-    @property
-    def my_lev(self):
-        return self.model.persons[0].level
-
-    @property
-    def my_sex(self):
-        return self.model.persons[0].sex
-
-    @property
-    def my_sco(self):
-        return self.model.persons[0].score
-
     # ???
     def cuserid(self):
         logger().debug("<<< cuserid(%s)", self)
@@ -125,18 +96,16 @@ class User():
         self.iamon = False
         self.world.openworld()
         f = False
-        if self.fpbn() is not None:
-            self.terminal.crapup("You are already on the system - you may only be on once at a time")
         self.mynum = self.world.find_empty(self.player)
 
-        self.player.load(self.mynum)
+        self.player = Player(user=self.model)
         self.player.name = self.name
-        self.player.loc = self.curch
-        self.player.pos = -1
-        self.player.lev = 1
-        self.player.vis = 0
+        self.player.location = self.curch
+        self.player.last_message = None
+        self.player.level = 1
+        self.player.visibility = 0
         self.player.strength = -1
-        self.player.wpn = -1
+        self.player.weapon = -1
         self.player.sex = 0
         self.iamon = True
         return True
@@ -155,11 +124,6 @@ class User():
         self.tdes = 0
         self.vdes = 0
 
-    # ???
-    def fpbn(self):
-        logger().debug("<<< fpbn(%s)", self.name)
-        return None
-
     def update(self):
         xp = self.cms - self.lasup
         if xp < 0:
@@ -167,7 +131,7 @@ class User():
         if xp < 10:
             return
         self.world.openworld()
-        self.player.pos = self.cms
+        self.player.message_id = self.cms
         self.lasup = self.cms
 
     def mstoout(self, msg):
@@ -189,13 +153,13 @@ class User():
         rooms = [-5, -183]
         self.initme()
         self.world.openworld()
-        self.player.strength = self.my_str
-        self.player.lev = self.my_lev
-        if self.my_lev < 10000:
-            self.player.vis = 0
+        self.player.strength = self.person.strength
+        self.player.level = self.person.level
+        if self.person.level < 10000:
+            self.player.visibility = 0
         else:
-            self.player.vis = -1
-        self.player.sexall = self.my_sex
+            self.player.visibility = -1
+        self.player.sex = self.person.sex
         self.player.helping = -1
         xy = "<s user=\"%s\">%s  has entered the game\n</s>" % (self.model.id, self.name)
         xx = "<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (self.model.id, self.name)
@@ -236,6 +200,7 @@ class User():
                     self.buff.bprintf("M or F")
             person.sex = sex
         person.save()
+        self.person = person
         return person
 
     # ???
@@ -244,7 +209,7 @@ class User():
 
     def trapch(self, chan):
         self.world.openworld()
-        self.player.loc = chan
+        self.player.location = chan
         self.lookin()
 
     def lookin(self, room=None):
@@ -257,7 +222,7 @@ class User():
         r = Room(room)
         if self.ail_blind:
             self.buff.bprintf("You are blind... you can't see a thing!\n")
-        if self.my_lev > 9:
+        if self.person.level > 9:
             self.buff.bprintf(r.showname())
         self.buff.bprintf(r.look(self))
         self.buff.bprintf("\n")
@@ -271,7 +236,7 @@ class User():
         self.i_setup = False
         self.world.openworld()
         self.dumpitems()
-        if self.player.vis < 10000:
+        if self.player.visibility < 10000:
             bk = "%s has departed from AberMUDII\n" % (self.name)
             self.sendsys(self, -10113, 0, bk)
         self.world.players[self.mynum] = None
@@ -283,7 +248,7 @@ class User():
         self.buff.chksnp(sntn, self)
 
     def deathroom(self):
-        if self.my_lev > 9:
+        if self.person.level > 9:
             self.buff.bprintf("<DEATH ROOM>\n")
         else:
             self.loseme()
@@ -294,7 +259,7 @@ class User():
         prmpt = ""
         if self.debug_mode:
             prmpt += "#"
-        if self.my_lev > 9:
+        if self.person.level > 9:
             prmpt += "----"
         if self.convflg == 0:
             prmpt += ">"
@@ -304,7 +269,7 @@ class User():
             prmpt += "*"
         else:
             prmpt += "?"
-        if self.player.vis:
+        if self.player.visibility:
             prmpt = "(%s)" % prmpt
         return "\r" + prmpt
 

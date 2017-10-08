@@ -130,11 +130,11 @@ class Terminal():
         self.show_bottom()
 
         # Set program title
-        if user.player.vis > 9999:
+        if user.player.visibility > 9999:
             self.set_progname(
                 title="-csh"
             )
-        elif user.player.vis == 0:
+        elif user.player.visibility == 0:
             self.set_progname(
                 title="   --}----- ABERMUD -----{--     Playing as %s" % user.name
             )
