@@ -178,9 +178,9 @@ class User():
             channel = self.curch
         logger().debug("<<< sendsys(%s, %s, %s, %s, %s)", self, to_user, msg_code, channel, text)
 
-    # ???
     def dumpitems(self):
-        logger().debug("<<< dumpitems()")
+        self.world.dumpstuff(self.mynum, self.curch)
+
 
     def initme(self):
         person = Person.query.by_user(self.model).first()

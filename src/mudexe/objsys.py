@@ -12,6 +12,32 @@
  flags (0=Normal 1+flannel)
 
 """
+from global_vars import logger
+
+
+class Item():
+    # ???
+    loc = None
+
+    def isdest(self):
+        logger().debug("<<< isdest(%s)",self)
+        return True
+
+    # ???
+    def ocarrf(self):
+        logger().debug("<<< ocarrf(%s)",self)
+        return True
+
+    def iscarrby(self, user):
+        # extern long curch;
+        # extern long my_lev;
+        if user.person.level < 10 and self.isdest():
+            return False
+        if self.ocarrf() != 1 and self.ocarrf() != 2:
+            return False
+        if self.loc != user:
+            return 0
+        return 1
 
 
 """
@@ -289,16 +315,6 @@ extern long my_lev;
     return(1);
     }
 
- iscarrby(item,user)
-    {
-    extern long curch;
-extern long my_lev;
-    if((my_lev<10)&&(isdest(item)))return(0);
-    if((ocarrf(item)!=1)&&(ocarrf(item)!=2)) return(0);
-    if(oloc(item)!=user) return(0);
-    return(1);
-    }
-
  dropitem()
     {
     extern long mynum,curch;
@@ -367,27 +383,6 @@ def lisobs():
             }
           }
        a++;
-       }
-    }
- dumpitems()
-    {
-    extern long mynum;
-    extern long curch;
-    dumpstuff(mynum,curch);
-    }
-
- dumpstuff(n,loc)
-    {
-    long b;
-    b=0;
-    while(b<NOBS)
-       {
-       if(iscarrby(b,n))
-
-          {
-          setoloc(b,loc,0);
-          }
-       b++;
        }
     }
 

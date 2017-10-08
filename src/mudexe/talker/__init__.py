@@ -90,36 +90,6 @@ def send2(block):
     """
 
 
-# FILE *fl_com;
-
-
-def openlock(f, perm):
-    """
-char *file;
-char *perm;
-    {
-    FILE *unit;
-    long ct;
-    extern int errno;
-    extern char globme[];
-    ct=0;
-   unit=fopen(file,perm);
-   if(unit==NULL) return(unit);
-   /* NOTE: Always open with R or r+ or w */
-intr:if(flock(fileno(unit),LOCK_EX)== -1)
-    if(errno==EINTR) goto intr; /* INTERRUPTED SYSTEM CALL CATCH */
-    switch(errno)
-    {
-        case ENOSPC:crapup("PANIC exit device full\n");
-/*    	case ESTALE:;*/
-        case EHOSTDOWN:;
-        case EHOSTUNREACH:crapup("PANIC exit access failure, NFS gone for a snooze");
-    }
-    return(unit);
-    }
-    """
-
-
 def talker(user):
     user.cms = None
     user.putmeon()
@@ -250,16 +220,5 @@ def userwrap():
 extern char globme[];
 extern long iamon;
 if(fpbns(globme)!= -1) {loseme();syslog("System Wrapup exorcised %s",globme);}
-}
-    """
-
-
-def fcloselock(f):
-    """
-FILE *file;
-{
-fflush(file);
-flock(fileno(file),LOCK_UN);
-fclose(file);
 }
     """

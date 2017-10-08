@@ -94,7 +94,6 @@ class Terminal():
         border = chr(int("2503", 16))
         print(border + "\t" + self.title + "\t" + border)
 
-    # ???
     def key_input(self, prmpt, max_len):
         self.key_mode = 0
         self.pr_bf = prmpt

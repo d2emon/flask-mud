@@ -119,3 +119,8 @@ class World():
 
     def fpbns(self, name):
         return Player.query.filter_by(name=name).first()
+
+    def dumpstuff(self, n, loc):
+        for b in self.objects:
+            if b.iscarrby(n):
+                b.loc = (loc, 0)
