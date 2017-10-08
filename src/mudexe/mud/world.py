@@ -22,15 +22,6 @@ class MudFull(Exception):
         return "Sorry AberMUD is full at the moment"
 
 
-class MudMessage():
-    """
-    Mud Message
-    """
-    def __init__(self, msg_code=0, text=""):
-        self.msg_code = msg_code
-        self.text = text
-
-
 class World():
     # ???
     maxu = 255
@@ -105,27 +96,3 @@ class World():
                 self.players[p] = player
                 return p
         raise MudFull()
-
-    def findstart(self):
-        return 0
-        # sec_read(self.filrf, bk, 0, 1)
-        # return bk[0]
-
-    def findend(self):
-        return 10
-        # sec_read(self.filrf, bk, 0, 2)
-        # return bk[1]
-
-    def readmsg(self, num):
-        # sec_read(self.filrf, buff, 0, 64)
-        # start = buff[0]
-        # actnum = num * 2 - start
-        """
-        sec_read(
-            self.filrf,
-            buff,
-            actnum,
-            self.msg_len * self.msg_count
-        )
-        """
-        return MudMessage(-5000, "Test")

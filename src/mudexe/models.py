@@ -1,6 +1,6 @@
 from app import db
 from app.models import PagedQuery
-
+from sqlalchemy import desc
 
 SEX_MALE = 0
 SEX_FEMALE = 1
@@ -52,3 +52,52 @@ class Person(db.Model):
     def save(self):
         db.session.add(self)
         db.session.commit()
+
+
+class MessageQuery(PagedQuery):
+    def findfirst(self):
+        '''
+        Return block data for user or -1 if not exist
+        '''
+        msg = self.order_by(Message.id).first()
+        if msg:
+            return msg.id
+        return 0
+
+    def findend(self):
+        '''
+        Return block data for user or -1 if not exist
+        '''
+        msg = self.order_by(desc(Message.id)).first()
+        if msg:
+            return msg.id
+        return 0
+
+    def readmsg(self, msg_id):
+        return self.order_by(Message.id).filter(Message.id > msg_id)
+
+
+class Message(db.Model):
+    """
+    Create a Message table
+    """
+    query_class = MessageQuery
+
+    id = db.Column(db.Integer, primary_key=True)
+    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    to_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    message_code = db.Column(db.Integer, default=0, info={'label': "Code"})
+    text = db.Column(db.String(255), info={'label': "Text"})
+
+    from_user = db.relationship('User', backref='sent', foreign_keys=[from_user_id])
+    to_user = db.relationship('User', backref='recieved', foreign_keys=[to_user_id])
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def __str__(self):
+        return "<%d>" % (self.message_code)
+
+    def is_text(self):
+        return self.message_code >= -3

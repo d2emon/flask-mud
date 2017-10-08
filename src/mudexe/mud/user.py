@@ -1,9 +1,10 @@
 from global_vars import logger
 from ..gamego.signals import alarm
-from ..models import User as UserModel, Person, SEX_MALE, SEX_FEMALE
+from ..models import Message, User as UserModel, Person, SEX_MALE, SEX_FEMALE
 from .textbuff import TextBuffer
 from .room import Room
 from .tty import Terminal
+from .world import World
 
 
 sexes = {
@@ -78,7 +79,7 @@ class User():
             self.model.save()
 
         self.i_setup = False
-        self.cms = -1
+        self.cms = None
         self.mynum = 0
         self.curch = 0
         self.iamon = False
@@ -90,7 +91,7 @@ class User():
         self.buff = TextBuffer()
         self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
         self.terminal.set_user(self)
-        self.world = None
+        self.world = World()
 
     @property
     def fullname(self):
@@ -120,14 +121,13 @@ class User():
         logger().debug("<<< cuserid(%s)", self)
         return 0
 
-    def putmeon(self, world=None):
+    def putmeon(self):
         self.iamon = False
-        world.openworld()
+        self.world.openworld()
         f = False
         if self.fpbn() is not None:
             self.terminal.crapup("You are already on the system - you may only be on once at a time")
-        self.mynum = world.find_empty(self.player)
-        self.world = world
+        self.mynum = self.world.find_empty(self.player)
 
         self.player.load(self.mynum)
         self.player.name = self.name
@@ -143,22 +143,19 @@ class User():
 
     def rte(self):
         self.world.openworld()
-        if self.cms == -1:
-            self.cms = self.world.findend()
-        too = self.world.findend()
-        ct = self.cms
-        # while ct < too:
-        # while ct >= too:
-        for ct in range(self.cms, too):
-            msg = self.world.readmsg(ct)
+        if self.cms is None:
+            self.cms = Message.query.findend()
+        messages = Message.query.readmsg(self.cms)
+        self.cms = Message.query.findend()
+        for msg in messages:
             self.mstoout(msg)
-        self.cms = ct
         self.update()
         eorte()
         self.rdes = 0
         self.tdes = 0
         self.vdes = 0
 
+    # ???
     def fpbn(self):
         logger().debug("<<< fpbn(%s)", self.name)
         return None
@@ -174,13 +171,15 @@ class User():
         self.lasup = self.cms
 
     def mstoout(self, msg):
-        # Print appropriate stuff from data block
+        """
+        Print appropriate stuff from data block
+        """
         if self.debug_mode:
-            self.buff.bprintf("\n<%d>" % (msg.msg_code))
-        if msg.msg_code < -3:
-            self.sysctrl(msg)
-        else:
+            self.buff.bprintf("\n%s" % (msg))
+        if msg.is_text:
             self.buff.bprintf(msg.text)
+        else:
+            self.sysctrl(msg)
 
     def sysctrl(self, msg):
         gamrcv(msg)
@@ -198,9 +197,8 @@ class User():
             self.player.vis = -1
         self.player.sexall = self.my_sex
         self.player.helping = -1
-        us = self.cuserid()
-        xy = "<s user=\"%s\">%s  has entered the game\n</s>" % (self.name, self.name)
-        xx = "<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (self.name, self.name)
+        xy = "<s user=\"%s\">%s  has entered the game\n</s>" % (self.model.id, self.name)
+        xx = "<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (self.model.id, self.name)
         self.sendsys(self, -10113, text=xx)
         self.rte()
         if randperc() > 50:

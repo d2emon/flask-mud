@@ -124,7 +124,7 @@ intr:if(flock(fileno(unit),LOCK_EX)== -1)
 
 def talker(user):
     user.cms = -1
-    user.putmeon(World())
+    user.putmeon()
     user.rte()
     user.world.closeworld()
     user.cms = -1
