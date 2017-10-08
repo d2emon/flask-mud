@@ -55,8 +55,6 @@ class User():
     in_fight = 0
     # ???
     fighting = None
-    # ???
-    convflg = 0
 
     def __init__(self, name):
         self.name = name  # globme
@@ -72,9 +70,10 @@ class User():
         self.iamon = False
         self.lasup = 0
         self.curmode = 0
+        self.convflg = 0
 
         # Other
-        self.player = Player()
+        self.player = None
         self.buff = TextBuffer()
         self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
         self.terminal.set_user(self)
@@ -95,9 +94,8 @@ class User():
     def putmeon(self):
         self.iamon = False
         self.world.openworld()
-        f = False
-        self.mynum = self.world.find_empty(self.player)
 
+        self.mynum = self.world.find_empty(self.name)
         self.player = Player(user=self.model)
         self.player.name = self.name
         self.player.location = self.curch
@@ -107,6 +105,7 @@ class User():
         self.player.strength = -1
         self.player.weapon = -1
         self.player.sex = 0
+        self.player.save()
         self.iamon = True
         return True
 
@@ -203,9 +202,15 @@ class User():
         self.person = person
         return person
 
-    # ???
     def saveme(self):
-        logger().debug("<<< saveme()")
+        # self.person.strength = self.my_str
+        # self.person.level = self.my_lev
+        self.person.sex = self.player.sex
+        # self.person.sco = self.my_sco
+        if self.zapped:
+            return
+        self.buff.bprintf("\nSaving %s\n" % (self.name))
+        self.person.save()
 
     def trapch(self, chan):
         self.world.openworld()
@@ -239,10 +244,10 @@ class User():
         if self.player.visibility < 10000:
             bk = "%s has departed from AberMUDII\n" % (self.name)
             self.sendsys(self, -10113, 0, bk)
-        self.world.players[self.mynum] = None
-        self.world.closeworld()
         if not self.zapped:
             self.saveme()
+        self.player.delete()
+        self.world.closeworld()
 
         sntn = self
         self.buff.chksnp(sntn, self)

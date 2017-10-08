@@ -1,7 +1,7 @@
 """
 Fast File Controller v0.1
 """
-# from global_vars import logger
+from global_vars import logger
 # from blib import sec_read, sec_write
 from .exceptions import Crapup
 from ..models import Player
@@ -12,9 +12,8 @@ class MudUnaviable(Crapup):
     crapup("Sorry AberMUD is currently unavailable")
     crapup("Cannot find World file")
     """
-    def __str__(self):
-        self.msg = "Sorry AberMUD is currently unavailable"
-        return self.crapup()
+    def __init__(self):
+        Crapup.__init__(self, "Sorry AberMUD is currently unavailable")
 
 
 class MudFull(Exception):
@@ -26,9 +25,14 @@ class MudFull(Exception):
 
 
 class AlreadyOnMud(Crapup):
-    def __str__(self):
-        self.msg = "You are already on the system - you may only be on once at a time"
-        return self.crapup()
+    def __init__(self):
+        Crapup.__init__(self, "You are already on the system - you may only be on once at a time")
+
+
+# ???
+def seeplayer(p):
+    logger().debug("<<< seeplayer(%s)", p)
+    return True
 
 
 class World():
@@ -80,6 +84,7 @@ class World():
         print("G" + ">" * 150 + "DB")
         if self.filrf is None:
             return
+        # player.save()
         """
         sec_write(
             self.filrf,
@@ -97,22 +102,19 @@ class World():
         # fcloselock(self.filrf)
         self.filrf = None
 
-    def find_empty(self, player):
-        if self.fpbn(player.name) is not None:
+    def find_empty(self, name):
+        if self.fpbn(name):
             raise AlreadyOnMud()
-        for p in range(len(self.players)):
-            if self.players[p] is None:
-                self.players[p] = player
-                return p
-        raise MudFull()
+        if len(Player.query.all()) > self.maxu:
+            raise MudFull()
 
     def fpbn(self, name):
         # extern char wd_them[],wd_him[],wd_her[],wd_it[];
         s = self.fpbns(name)
         if s is None:
             return s
-        # if not seeplayer(s):
-        #     return None
+        if not seeplayer(s):
+            return None
         return s
 
     def fpbns(self, name):

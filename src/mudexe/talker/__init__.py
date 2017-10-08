@@ -8,7 +8,6 @@ are (C) 1987/88  Alan Cox,Jim Finnis,Richard Acott
 This file holds the basic communications routines
 """
 # from global_vars import logger
-from ..mud.world import World
 from ..mud.tty import special
 
 
@@ -68,7 +67,6 @@ long offd,offs,len;
     """
 
 # long gurum=0;
-# long convflg=0;
 
 
 def send2(block):
@@ -123,7 +121,7 @@ intr:if(flock(fileno(unit),LOCK_EX)== -1)
 
 
 def talker(user):
-    user.cms = -1
+    user.cms = None
     user.putmeon()
     user.rte()
     user.world.closeworld()

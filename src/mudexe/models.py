@@ -73,6 +73,14 @@ class Player(db.Model):
     user = db.relationship('User', backref='players')
     last_message = db.relationship('Message')
 
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
 
 class MessageQuery(PagedQuery):
     def findfirst(self):
