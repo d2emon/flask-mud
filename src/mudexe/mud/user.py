@@ -1,6 +1,6 @@
 from global_vars import logger
 from ..gamego.signals import alarm
-from ..models import Person, SEX_MALE, SEX_FEMALE
+from ..models import User as UserModel, Person, SEX_MALE, SEX_FEMALE
 from .textbuff import TextBuffer
 from .room import Room
 from .tty import Terminal
@@ -72,6 +72,11 @@ class User():
 
     def __init__(self, name):
         self.name = name  # globme
+        self.model = UserModel.query.filter_by(name=self.name).first()
+        if self.model is None:
+            self.model = UserModel(name=self.name)
+            self.model.save()
+
         self.i_setup = False
         self.cms = -1
         self.mynum = 0
@@ -80,10 +85,6 @@ class User():
         self.lasup = 0
         self.curmode = 0
 
-        self.my_str = 0
-        self.my_lev = 0
-        self.my_sex = 0
-        self.my_sco = 0
         # Other
         self.player = PlayerData()
         self.buff = TextBuffer()
@@ -97,6 +98,22 @@ class User():
             return "The %s" % (self.name)
         else:
             return self.name
+
+    @property
+    def my_str(self):
+        return self.model.persons[0].strength
+
+    @property
+    def my_lev(self):
+        return self.model.persons[0].level
+
+    @property
+    def my_sex(self):
+        return self.model.persons[0].sex
+
+    @property
+    def my_sco(self):
+        return self.model.persons[0].score
 
     # ???
     def cuserid(self):
@@ -205,25 +222,22 @@ class User():
         logger().debug("<<< dumpitems()")
 
     def initme(self):
-        person = Person.query.by_user(self).first()
+        person = Person.query.by_user(self.model).first()
         if person is None:
             self.buff.bprintf("Creating character....")
-            person = Person()
-            self.my_sex = None
-            while self.my_sex is None:
+            person = Person(user=self.model)
+            sex = None
+            while sex is None:
                 self.buff.bprintf("\nSex (M/F) : ")
                 self.buff.pbfr(self)
                 # self.terminal.keysetback()
                 sex_id = self.terminal.getkbd(1).lower()
                 # self.terminal.keysetup()
-                self.my_sex = sexes.get(sex_id)
-                if self.my_sex is None:
+                sex = sexes.get(sex_id)
+                if sex is None:
                     self.buff.bprintf("M or F")
-            self.fill_person(person)
+            person.sex = sex
         person.save()
-
-        # s, user.my_str, user.my_sco, user.my_lev, user.my_sex = p.newpers()
-        person.decpers(self)
         return person
 
     # ???
@@ -333,10 +347,3 @@ class User():
         # on_timing()
         self.world.closeworld()
         self.terminal.key_reprint()
-
-    def fill_person(self, person):
-        person.name = self.name
-        person.strength = self.my_str
-        person.level = self.my_lev
-        person.sex = self.my_sex
-        person.score = self.my_sco

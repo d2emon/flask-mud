@@ -12,11 +12,23 @@ class PersonQuery(PagedQuery):
         Return block data for user or -1 if not exist
         '''
         if user is None:
-            name = ""
+            user_id = 0
         else:
-            name = user.name.lower()
+            user_id = user.id
 
-        return self.filter_by(name=name)
+        return self.filter_by(user_id=user_id)
+
+
+class User(db.Model):
+    """
+    Create a User table
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), info={'label': "Name"})
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
 
 
 class Person(db.Model):
@@ -26,21 +38,16 @@ class Person(db.Model):
     query_class = PersonQuery
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), info={'label': "Name"})
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     score = db.Column(db.Integer, default=0, info={'label': "Score"})
     strength = db.Column(db.Integer, default=40, info={'label': "Strength"})
     sex = db.Column(db.Integer, default=0, info={'label': "Sex"})
     level = db.Column(db.Integer, default=1, info={'label': "Level"})
 
+    user = db.relationship('User', backref='persons')
+
     def __repr__(self):
         return self.name
-
-    def decpers(self, user):
-        # user.name = self.name
-        user.my_str = self.strength
-        user.my_sco = self.score
-        user.my_lev = self.level
-        user.my_sex = self.sex
 
     def save(self):
         db.session.add(self)
