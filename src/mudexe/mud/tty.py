@@ -78,7 +78,6 @@ class Terminal():
             self.btmscr()
         self.pbfr()
 
-    # ???
     def set_progname(self, p_id=0, title=""):
         """
         int x=0;

@@ -1,9 +1,9 @@
 from global_vars import logger
 from ..gamego.signals import alarm
-from ..models import Message, User as UserModel, Player, Person, SEX_MALE, SEX_FEMALE
+from ..models import Message, User as UserModel, Person, SEX_MALE, SEX_FEMALE
 from .textbuff import TextBuffer
 from .room import Room
-from .tty import Terminal
+from .tty import Terminal, special
 from .world import World
 
 
@@ -51,10 +51,11 @@ class User():
             self.model = UserModel(name=self.name)
             self.model.save()
 
+        self.message_id = None  # cms
+        self.location = 0  # curch
+
         self.i_setup = False
-        self.cms = None
         self.mynum = 0
-        self.curch = 0
         self.iamon = False
         self.lasup = 0
         self.curmode = 0
@@ -86,32 +87,34 @@ class User():
         logger().debug("<<< cuserid(%s)", self)
         return 0
 
+    def prepare_game(self):
+        self.message_id = None
+        self.putmeon()
+        self.rte()
+        self.world.closeworld()
+        self.message_id = None
+        self.special(".g")
+        self.i_setup = True
+
+    def special(self, cmd):
+        special(cmd, self)
+
     def putmeon(self):
         self.iamon = False
-        self.world.openworld()
-
-        self.mynum = self.world.find_empty(self.name)
-        self.player = Player(user=self.model)
-        self.player.name = self.name
-        self.player.location = self.curch
-        self.player.last_message = None
-        self.player.level = 1
-        self.player.visibility = 0
-        self.player.strength = -1
-        self.player.weapon = -1
-        self.player.sex = 0
+        self.player = self.world.find_empty(self)
+        self.mynum = self.player.id
         self.player.save()
         self.iamon = True
         return True
 
     def rte(self):
         self.world.openworld()
-        if self.cms is None:
-            self.cms = Message.query.findend()
-        messages = Message.query.readmsg(self.cms)
-        self.cms = Message.query.findend()
-        for msg in messages:
-            self.mstoout(msg)
+        if self.message_id is None:
+            self.message_id = Message.query.findend()
+        messages = Message.query.readmsg(self.message_id)
+        self.message_id = Message.query.findend()
+        for message in messages:
+            self.mstoout(message)
         self.update()
         eorte()
         self.rdes = 0
@@ -119,14 +122,14 @@ class User():
         self.vdes = 0
 
     def update(self):
-        xp = self.cms - self.lasup
+        xp = self.message_id - self.lasup
         if xp < 0:
             xp = -xp
         if xp < 10:
             return
         self.world.openworld()
-        self.player.message_id = self.cms
-        self.lasup = self.cms
+        self.player.message_id = self.message_id
+        self.lasup = self.message_id
 
     def mstoout(self, msg):
         """
@@ -163,13 +166,13 @@ class User():
             room = rooms[0]
         else:
             room = rooms[1]
-        self.curch = room
+        self.location = room
         self.trapch(room)
         self.sendsys(self, -10000, text=xy)
 
     def sendsys(self, to_user, msg_code, channel=None, text=""):
         if channel is None:
-            channel = self.curch
+            channel = self.location
         # if msg_code != -9900 and msg_code != -10021:
         #     block[64] = text
         # else:
@@ -195,7 +198,7 @@ class User():
         #     longwthr()
 
     def dumpitems(self):
-        self.world.dumpstuff(self.mynum, self.curch)
+        self.world.dumpstuff(self.mynum, self.location)
 
     def initme(self):
         person = Person.query.by_user(self.model).first()
@@ -237,7 +240,7 @@ class User():
         Lords ????
         """
         if room is None:
-            room = self.curch
+            room = self.location
         self.world.closeworld()
         r = Room(room)
         if self.ail_blind:
@@ -299,7 +302,7 @@ class User():
             if f is None:
                 self.in_fight = 0
                 self.fighting = None
-            elif f.loc != self.curch:
+            elif f.location != self.location:
                 self.in_fight = 0
                 self.fighting = None
         if self.in_fight:

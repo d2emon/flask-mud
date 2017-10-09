@@ -8,27 +8,14 @@ are (C) 1987/88  Alan Cox,Jim Finnis,Richard Acott
 This file holds the basic communications routines
 """
 # from global_vars import logger
-from ..mud.tty import special
 
 
 # include "files.h"
-# include "flock.h"
 
 # long oddcat=0;
 # long  talkfl=0;
 
-# include <stdio.h>
-# include <sys/errno.h>
-# include <sys/file.h>
-
-# extern FILE * openlock();
-# extern long my_str;
-# extern long my_sex;
-# extern long my_lev;
 # extern FILE * openroom();
-# extern FILE * openworld();
-# extern char * pname();
-# extern char * oname();
 # extern long ppos();
 
 # long  meall=0;
@@ -70,13 +57,7 @@ long offd,offs,len;
 
 
 def talker(user):
-    user.cms = None
-    user.putmeon()
-    user.rte()
-    user.world.closeworld()
-    user.cms = -1
-    special(".g", user)
-    user.i_setup = True
+    user.prepare_game()
     # while True:
     for i in range(5):
         user.do_loop()

@@ -20,10 +20,10 @@ def play(username=None, **kwargs):
     """
     Play game
     """
-    sig_init()
     if username is None:
-        print("Args!")
-        exit(0)
+        raise Exception("Args!")
+
+    sig_init()
     print("Entering Game ....")
     user = User(username)
     print("Hello %s" % (user.fullname))

@@ -102,11 +102,23 @@ class World():
         # fcloselock(self.filrf)
         self.filrf = None
 
-    def find_empty(self, name):
-        if self.fpbn(name):
+    def find_empty(self, user):
+        self.openworld()
+        if self.fpbn(user.name):
             raise AlreadyOnMud()
         if len(Player.query.all()) > self.maxu:
             raise MudFull()
+        return Player(
+            user=user.model,
+            name=user.name,
+            location=user.location,
+            last_message=None,
+            level=1,
+            visibility=0,
+            strength=-1,
+            weapon=-1,
+            sex=0,
+        )
 
     def fpbn(self, name):
         # extern char wd_them[],wd_him[],wd_her[],wd_it[];
