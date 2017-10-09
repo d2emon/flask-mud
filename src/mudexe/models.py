@@ -1,9 +1,16 @@
 from app import db
 from app.models import PagedQuery
 from sqlalchemy import desc
+from global_vars import logger
 
 SEX_MALE = 0
 SEX_FEMALE = 1
+
+
+# ???
+def seeplayer(p):
+    logger().debug("<<< seeplayer(%s)", p)
+    return True
 
 
 class PersonQuery(PagedQuery):
@@ -54,10 +61,25 @@ class Person(db.Model):
         db.session.commit()
 
 
+class PlayerQuery(PagedQuery):
+    def fpbns(self, name):
+        return self.filter_by(name=name).first()
+
+    def fpbn(self, name):
+        player = self.fpbns(name)
+        if player is None:
+            return None
+        if not seeplayer(player):
+            return None
+        return player
+
+
 class Player(db.Model):
     """
     Create a Player model
     """
+    query_class = PlayerQuery
+
     id = db.Column(db.Integer, primary_key=True)  # ct
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(32), info={'label': "Name"})  # 0

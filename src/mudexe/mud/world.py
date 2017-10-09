@@ -1,7 +1,7 @@
 """
 Fast File Controller v0.1
 """
-from global_vars import logger
+# from global_vars import logger
 # from blib import sec_read, sec_write
 from .exceptions import Crapup
 from ..models import Player
@@ -27,12 +27,6 @@ class MudFull(Exception):
 class AlreadyOnMud(Crapup):
     def __init__(self):
         Crapup.__init__(self, "You are already on the system - you may only be on once at a time")
-
-
-# ???
-def seeplayer(p):
-    logger().debug("<<< seeplayer(%s)", p)
-    return True
 
 
 class World():
@@ -104,7 +98,7 @@ class World():
 
     def find_empty(self, user):
         self.openworld()
-        if self.fpbn(user.name):
+        if Player.query.fpbn(user.name):
             raise AlreadyOnMud()
         if len(Player.query.all()) > self.maxu:
             raise MudFull()
@@ -120,19 +114,8 @@ class World():
             sex=0,
         )
 
-    def fpbn(self, name):
-        # extern char wd_them[],wd_him[],wd_her[],wd_it[];
-        s = self.fpbns(name)
-        if s is None:
-            return s
-        if not seeplayer(s):
-            return None
-        return s
-
-    def fpbns(self, name):
-        return Player.query.filter_by(name=name).first()
-
     def dumpstuff(self, n, loc):
         for b in self.objects:
             if b.iscarrby(n):
-                b.loc = (loc, 0)
+                b.loc = loc
+                b.carrf = 0
