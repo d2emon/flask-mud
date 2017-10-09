@@ -60,15 +60,15 @@ class Player(db.Model):
     """
     id = db.Column(db.Integer, primary_key=True)  # ct
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    name = db.Column(db.String(32), info={'label': "Name"})
-    location = db.Column(db.Integer, default=0, info={'label': "Location"})  # loc
-    message_id = db.Column(db.Integer, db.ForeignKey('message.id'))  # pos
-    level = db.Column(db.Integer, default=1, info={'label': "Level"})  # lev
-    visibility = db.Column(db.Integer, default=0, info={'label': "Visibility"})  # vis
-    strength = db.Column(db.Integer, default=-1, info={'label': "Strength"})  # str
-    weapon = db.Column(db.Integer, default=-1, info={'label': "Weapon"})  # wpn
-    helping = db.Column(db.Integer, default=-1, info={'label': "Helping"})  # helping
-    sex = db.Column(db.Integer, default=0, info={'label': "Sex"})
+    name = db.Column(db.String(32), info={'label': "Name"})  # 0
+    location = db.Column(db.Integer, default=0, info={'label': "Location"})  # loc 4
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'))  # pos 5
+    level = db.Column(db.Integer, default=1, info={'label': "Level"})  # lev 10
+    visibility = db.Column(db.Integer, default=0, info={'label': "Visibility"})  # vis 8
+    strength = db.Column(db.Integer, default=-1, info={'label': "Strength"})  # str 7
+    weapon = db.Column(db.Integer, default=-1, info={'label': "Weapon"})  # wpn 11
+    helping = db.Column(db.Integer, default=-1, info={'label': "Helping"})  # helping 13
+    sex = db.Column(db.Integer, default=0, info={'label': "Sex"})  # sex 9
 
     user = db.relationship('User', backref='players')
     last_message = db.relationship('Message')
@@ -95,7 +95,8 @@ class Player(db.Model):
             else:
                 user.wd_him = self.name
             res += " is here carrying\n"
-            self.lobjsat()
+            res += self.lobjsat(user)
+        return res
 
     def disl4(self, user):
         lev_desc = {
@@ -145,6 +146,42 @@ class Player(db.Model):
         else:
             return l[self.sex]
 
+    def lobjsat(self, user):
+        self.aobjsat(1, user)
+
+    def aobjsat(self, mode, user):
+        """
+        Carried Loc !
+        """
+        res = ""
+        d = 0
+        e = False
+        f = 0
+        objects = []
+        for c in objects:
+            if not c.iscarrby(self):
+                continue
+            e = True
+            o_txt = c.name
+            if user.debug_mode:
+                x = "%d" % (c.id)
+                o_txt += "{%-3s}" % (x)
+            if c.iswornby(self):
+                o_txt += " <worn>"
+            if c.is_dest:
+                o_txt = "(%s)" % (o_txt)
+            o_txt += " "
+            f += len(o_txt)
+            if f > 79:
+                f = 0
+                res += "\n"
+            res += o_txt
+            d += 4
+        if not e:
+            return "Nothing\n"
+        res += "\n"
+        return res
+
 
 class MessageQuery(PagedQuery):
     def findfirst(self):
@@ -193,3 +230,90 @@ class Message(db.Model):
 
     def is_text(self):
         return self.message_code >= -3
+
+
+"""
+#include "object.h"
+#include <stdio.h>
+#include "files.h"
+
+extern FILE* openlock();
+ /*
+
+ Some more basic functions
+
+
+ Note
+
+ state(obj)
+ setstate(obj,val)
+ destroy(obj)
+
+ are elsewhere
+
+ */
+extern OBJECT objects[];
+
+
+
+ptothlp(pl)
+{
+int tot;
+extern long maxu;
+int ct=0;
+while(ct<maxu)
+{
+if(ploc(ct)!=ploc(pl)){ct++;continue;}
+if(phelping(ct)!=pl){ct++;continue;}
+return(ct);
+}
+return(-1);
+}
+
+
+psetflg(ch,x)
+long ch;
+long x;
+{
+extern long ublock[];
+ublock[16*ch+9]|=(1<<x);
+}
+
+pclrflg(ch,x)
+long ch;
+long x;
+{
+extern long ublock[];
+ublock[16*ch+9]&=~(1<<x);
+}
+
+/*Pflags
+
+0 sex
+1 May not be exorcised ok
+2 May change pflags ok
+3 May use rmedit ok
+4 May use debugmode ok
+5 May use patch
+6 May be snooped upon
+
+*/
+
+ptstbit(ch,x)
+long ch;
+long x;
+{
+return(ptstflg(ch,x));
+}
+
+
+ptstflg(ch,x)
+long ch;
+long x;
+{
+extern long ublock[];
+extern char globme[];
+if((x==2)&&(strcmp(globme,"Debugger")==0)) return(1<<x);
+return(ublock[16*ch+9]&(1<<x));
+}
+"""

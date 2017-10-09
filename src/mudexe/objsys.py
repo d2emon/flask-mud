@@ -16,55 +16,46 @@ from global_vars import logger
 
 
 class Item():
-    # ???
-    loc = None
-    # ???
-    name = ""
+    def __init__(self):
+        # Objects
+        self.name = ""
+        self.desc = []  # longt
+        self.flannel = 0
+        self.max_state = 0
+        self.value = 0
 
-    # ???
-    def isdest(self):
-        logger().debug("<<< isdest(%s)", self)
-        return True
+        # Bits
+        self.is_dest = False  # 0
 
-    # ???
-    def ocarrf(self):
-        logger().debug("<<< ocarrf(%s)", self)
-        return True
+        # Objinfo
+        self.loc = None  # 0
+        self.carrf = 0  # 3
 
     # ???
     def state(self):
         logger().debug("<<< state(%s)", self)
         return True
 
-    # ???
-    def oflannel(self):
-        logger().debug("<<< oflannel(%s)", self)
-        return True
-
-    # ???
-    def olongt(self, state):
-        logger().debug("<<< olongt(%s, %s)", self, state)
-        return True
-
     def ishere(self, user):
-        if user.person.level < 10 and self.isdest():
+        if user.person.level < 10 and self.is_dest:
             return False
-        if self.ocarrf() == 1:
+        if self.carrf == 1:
             return False
         if self.loc != user.curch:
             return 0
         return True
 
     def oplong(self, user):
+        desc = self.desc[self.state()]
         if user.debug_mode:
-            return "{%d} %s\n" % (self, self.olongt(self.state()))
-        if len(self.olongt(self.state())):
-            return "%s\n" % (self.olongt(self.state()))
+            return "{%d} %s\n" % (self, desc)
+        if desc:
+            return "%s\n" % (desc)
         return ""
 
     def lojal2(self, n, user):
         res = ""
-        if self.ishere(user) and self.oflannel() == n:
+        if self.ishere(user) and self.flannel == n:
             if self.state() > 3:
                 continue
             if not self.olongt(self, self.state()):
@@ -78,11 +69,20 @@ class Item():
     def iscarrby(self, user):
         if user.person.level < 10 and self.isdest():
             return False
-        if self.ocarrf() != 1 and self.ocarrf() != 2:
+        if self.carrf != 1 and self.carrf != 2:
             return False
         if self.loc != user:
-            return 0
-        return 1
+            return False
+        return True
+
+    def iscontin(self, o2, user):
+        if self.carrf != 3:
+            return False
+        if self.loc != o2:
+            return False
+        if user.person.level < 10 and self.is_dest:
+            return False
+        return True
 
 
 """
@@ -114,71 +114,6 @@ def inventory():
  Stamina
  Flag 1=carr 0=here
 """
-
-
-def lobjsat(loc):
-    """
-    {
-    aobjsat(loc,1);
-    }
-    """
-
-
-def aobjsat(loc, mode):
-    """
-    /* Carried Loc ! */
-    {
-    long a,b,c,d,e,f;
-    char x[6],y[6];
-    extern long debug_mode;
-    b=0;
-    c=0;
-    d=0;
-    e=0;
-    f=0;
-    while(c<NOBS)
-       {
-       if(((iscarrby(c,loc))&&(mode==1))||
-((iscontin(c,loc))&&(mode==3)))
-          {
-          e=1;
-              f+=1+strlen(oname(c));
-if(debug_mode){ f+=5;sprintf(x,"%d",c);sprintf(y,"{%-3s}",x);}
-if(isdest(c)) f+=2;
-if(iswornby(c,loc)) f+=strlen("<worn> ");
-          if(f>79)
-             {
-             f=0;
-            bprintf("\n");
-             }
-if(isdest(c)) bprintf("(");
-         bprintf("%s",oname(c));
-         if(debug_mode) bprintf(y);
-if(iswornby(c,loc)) bprintf(" <worn>");
-if(isdest(c)) bprintf(")");
-bprintf(" ");
-          f++;
-          }
-       d+=4;
-       c++;
-       }
-    if(!e)bprintf("Nothing");
-   bprintf("\n");
-    }
-    """
-
-
-def iscontin(o1, o2):
-    """
-    {
-    extern long my_lev;
-    if(ocarrf(o1)!=3) return(0)
-    ;
-    if(oloc(o1)!=o2) return(0);
-    if((my_lev<10)&&(isdest(o1)))return(0);
-    return(1);
-    }
-    """
 
 
 """
@@ -442,4 +377,65 @@ def usercom():
     whocom();
     my_lev=a;
     }
+    """
+
+    """
+ isavl(ob)
+    {
+    extern long mynum;
+    if(ishere(ob)) return(1);
+    return(iscarrby(ob,mynum));
+    }
+
+ ospare(ob)
+    {
+    return(otstbit(ob,0)?-1:0);
+    }
+
+ocreate(ob)
+{
+oclrbit(ob,0);
+}
+
+osetbit(ob,x)
+{
+extern long objinfo[];
+bit_set(&(objinfo[4*ob+2]),x);
+}
+oclearbit(ob,x)
+{
+extern long objinfo[];
+bit_clear(&(objinfo[4*ob+2]),x);
+}
+otstbit(ob,x)
+{
+extern long objinfo[];
+return(bit_fetch(objinfo[4*ob+2],x));
+}
+osetbyte(o,x,y)
+{
+extern long objinfo[];
+byte_put(&(objinfo[4*o+2]),x,y);
+}
+obyte(o,x)
+{
+extern long objinfo[];
+return(byte_fetch(objinfo[4*o+2],x));
+}
+ohany(mask)
+long mask;
+{
+extern long numobs;
+auto a;
+extern long mynum;
+extern long objinfo[];
+a=0;
+mask=mask<<16;
+while(a<numobs)
+{
+if(((iscarrby(a,mynum))||(ishere(a,mynum)))&&(objinfo[4*a+2]&mask))return(1);
+a++;
+}
+return(0);
+}
     """

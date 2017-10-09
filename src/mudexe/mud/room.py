@@ -100,3 +100,41 @@ class Room():
             if user.curmode:
                 res += self.lispeople(user)
         return res
+
+    def lobjsat(self, user):
+        self.aobjsat(1, user)
+
+    def aobjsat(self, mode, user):
+        """
+        Carried Loc !
+        """
+        res = ""
+        d = 0
+        e = False
+        f = 0
+        objects = []
+        for c in objects:
+            if mode == 1 and not c.iscarrby(self):
+                continue
+            if mode == 3 and not c.iscontin(self):
+                continue
+            e = True
+            o_txt = c.name
+            if user.debug_mode:
+                x = "%d" % (c.id)
+                o_txt += "{%-3s}" % (x)
+            if c.iswornby(self):
+                o_txt += " <worn>"
+            if c.is_dest:
+                o_txt = "(%s)" % (o_txt)
+            o_txt += " "
+            f += len(o_txt)
+            if f > 79:
+                f = 0
+                res += "\n"
+            res += o_txt
+            d += 4
+        if not e:
+            return "Nothing\n"
+        res += "\n"
+        return res
