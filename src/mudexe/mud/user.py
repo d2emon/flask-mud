@@ -36,21 +36,9 @@ def onlook():
 
 class User():
     # ???
-    debug_mode = True
-    # ???
-    rdes = 0
-    # ???
-    vdes = 0
-    # ???
-    tdes = 0
-    # ???
     ail_blind = False
     # ???
     curmode = False
-    # ???
-    brmode = False
-    # ???
-    zapped = False
     # ???
     in_fight = 0
     # ???
@@ -71,6 +59,13 @@ class User():
         self.lasup = 0
         self.curmode = 0
         self.convflg = 0
+        self.debug_mode = True  # False
+        self.tdes = 0
+        self.rdes = 0
+        self.vdes = 0
+        self.ades = 0
+        self.zapped = False
+        self.brmode = False
 
         # Other
         self.player = None
@@ -172,15 +167,35 @@ class User():
         self.trapch(room)
         self.sendsys(self, -10000, text=xy)
 
-    # ???
     def sendsys(self, to_user, msg_code, channel=None, text=""):
         if channel is None:
             channel = self.curch
-        logger().debug("<<< sendsys(%s, %s, %s, %s, %s)", self, to_user, msg_code, channel, text)
+        # if msg_code != -9900 and msg_code != -10021:
+        #     block[64] = text
+        # else:
+        #     block[64] = i[0]
+        #     block[65] = i[1]
+        #     block[66] = i[2]
+        self.send2(to_user, msg_code, channel, text)
+
+    def send2(self, to_user, msg_code, channel, text):
+        if to_user is not None:
+            to_user = to_user.player
+        msg = Message(
+            from_player=self.player,
+            to_player=to_user,
+            message_code=msg_code,
+            # channel=channel,
+            text=text,
+        )
+        msg.save()
+        # number = self.world.findend() - self.world.findstart()
+        # if number >= 199:
+        #     self.cleanup()
+        #     longwthr()
 
     def dumpitems(self):
         self.world.dumpstuff(self.mynum, self.curch)
-
 
     def initme(self):
         person = Person.query.by_user(self.model).first()

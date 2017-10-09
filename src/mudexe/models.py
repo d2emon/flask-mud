@@ -71,7 +71,7 @@ class Player(db.Model):
     sex = db.Column(db.Integer, default=0, info={'label': "Sex"})  # sex 9
 
     user = db.relationship('User', backref='players')
-    last_message = db.relationship('Message')
+    last_message = db.relationship('Message', foreign_keys=[message_id, ])
 
     def delete(self):
         db.session.delete(self)
@@ -213,13 +213,13 @@ class Message(db.Model):
     query_class = MessageQuery
 
     id = db.Column(db.Integer, primary_key=True)
-    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    to_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    from_user_id = db.Column(db.Integer, db.ForeignKey('player.id'))
+    to_user_id = db.Column(db.Integer, db.ForeignKey('player.id'))
     message_code = db.Column(db.Integer, default=0, info={'label': "Code"})
     text = db.Column(db.String(255), info={'label': "Text"})
 
-    from_user = db.relationship('User', backref='sent', foreign_keys=[from_user_id])
-    to_user = db.relationship('User', backref='recieved', foreign_keys=[to_user_id])
+    from_player = db.relationship('Player', backref='sent', foreign_keys=[from_user_id])
+    to_player = db.relationship('Player', backref='recieved', foreign_keys=[to_user_id])
 
     def save(self):
         db.session.add(self)

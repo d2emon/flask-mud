@@ -69,27 +69,6 @@ long offd,offs,len;
 # long gurum=0;
 
 
-def send2(block):
-    """
- long *block;
-    {
-    FILE * unit;
-    long number;
-    long inpbk[128];
-    extern char globme[];
-    extern char *echoback;
-    unit=openworld();
-    if (unit<0) {loseme();crapup("\nAberMUD: FILE_ACCESS : Access failed\n");}
-    sec_read(unit,inpbk,0,64);
-    number=2*inpbk[1]-inpbk[0];inpbk[1]++;
-    sec_write(unit,block,number,128);
-    sec_write(unit,inpbk,0,64);
-    if (number>=199) cleanup(inpbk);
-    if(number>=199) longwthr();
-    }
-    """
-
-
 def talker(user):
     user.cms = None
     user.putmeon()
