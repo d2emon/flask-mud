@@ -1,4 +1,4 @@
-from ..models import Person
+from .models import Person
 
 
 def delpers(user):
@@ -19,14 +19,14 @@ def validname(user):
         if user.name[a] == ' ':
             return False
         a += 1
-    if user.world.fobn(name) is None:
+    if user.world.fobn(user.name) is None:
         user.buff.bprintf("I can't call you that , It would be confused with an object\n")
         return False
     return True
 
 
 def resword(name):
-    if name in [
+    return name in [
         "The",
         "Me",
         "Myself",
@@ -35,6 +35,4 @@ def resword(name):
         "Him",
         "Her",
         "Someone",
-    ]:
-        return True
-    return False
+    ]
