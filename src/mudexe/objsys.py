@@ -18,19 +18,64 @@ from global_vars import logger
 class Item():
     # ???
     loc = None
+    # ???
+    name = ""
 
+    # ???
     def isdest(self):
-        logger().debug("<<< isdest(%s)",self)
+        logger().debug("<<< isdest(%s)", self)
         return True
 
     # ???
     def ocarrf(self):
-        logger().debug("<<< ocarrf(%s)",self)
+        logger().debug("<<< ocarrf(%s)", self)
         return True
 
+    # ???
+    def state(self):
+        logger().debug("<<< state(%s)", self)
+        return True
+
+    # ???
+    def oflannel(self):
+        logger().debug("<<< oflannel(%s)", self)
+        return True
+
+    # ???
+    def olongt(self, state):
+        logger().debug("<<< olongt(%s, %s)", self, state)
+        return True
+
+    def ishere(self, user):
+        if user.person.level < 10 and self.isdest():
+            return False
+        if self.ocarrf() == 1:
+            return False
+        if self.loc != user.curch:
+            return 0
+        return True
+
+    def oplong(self, user):
+        if user.debug_mode:
+            return "{%d} %s\n" % (self, self.olongt(self.state()))
+        if len(self.olongt(self.state())):
+            return "%s\n" % (self.olongt(self.state()))
+        return ""
+
+    def lojal2(self, n, user):
+        res = ""
+        if self.ishere(user) and self.oflannel() == n:
+            if self.state() > 3:
+                continue
+            if not self.olongt(self, self.state()):
+                # OLONGT NOTE TO BE ADDED
+                if self.isdest():
+                    res += "--"
+                res += self.oplong(user)
+                user.wd_it = self.name
+        return res
+
     def iscarrby(self, user):
-        # extern long curch;
-        # extern long my_lev;
         if user.person.level < 10 and self.isdest():
             return False
         if self.ocarrf() != 1 and self.ocarrf() != 2:
@@ -304,17 +349,6 @@ bprintf("The door clicks shut....\n");
 }
 }
 
- ishere(item)
-    {
-    extern long curch;
-    long a;
-extern long my_lev;
-    if((my_lev<10)&&(isdest(item)))return(0);
-    if(ocarrf(item)==1) return(0);
-    if(oloc(item)!=curch) return(0);
-    return(1);
-    }
-
  dropitem()
     {
     extern long mynum,curch;
@@ -354,38 +388,7 @@ setoloc(a,-6,0);
 """
 
 
-def lisobs():
-    """
-    {
-    lojal2(1);
-    showwthr();
-    lojal2(0);
-    }
-    """
-
-
 """
- lojal2(n)
-    {
-    extern char wd_it[];
-    long a;
-    a=0;
-    while(a<NOBS)
-       {
-       if((ishere(a))&&(oflannel(a)==n))
-          {
-              if(state(a)>3) continue;
-              if(!!strlen(olongt(a,state(a)))) /*OLONGT NOTE TO BE ADDED */
-              {
-                if(isdest(a)) bprintf("--");
-                oplong(a);
-                strcpy(wd_it,oname(a));
-            }
-          }
-       a++;
-       }
-    }
-
  whocom()
     {
     long a;
@@ -426,160 +429,17 @@ bprintf("\n");
     disl4(n,s);
    bprintf("\n");
     }
- disl4(n,s)
+    """
+
+
+def usercom():
+    """
     {
-    extern long hasfarted;
-    switch(n)
-       {
-       case 1:
-         bprintf("The Novice");
-          break;
-       case 2:
-          if(!s)bprintf("The Adventurer");
-          else
-            bprintf("The Adventuress");
-          break;
-       case 3:
-         bprintf("The Hero");
-          if(s)bprintf("ine");
-          break;
-       case 4:
-         bprintf("The Champion");
-          break;
-       case 5:
-          if(!s)bprintf("The Conjurer");
-          else
-            bprintf("The Conjuress");
-          break;
-       case 6:
-         bprintf("The Magician");
-          break;
-       case 7:
-          if(s)bprintf("The Enchantress");
-          else
-            bprintf("The Enchanter");
-          break;
-       case 8:
-          if(s)bprintf("The Sorceress");
-          else
-            bprintf("The Sorceror");
-          break;
-case 9:bprintf("The Warlock");
-break;
-       case 10:
-          if(s)bprintf("The Apprentice Witch");
-          else
-            bprintf("The Apprentice Wizard");
-          break;
-case 11:bprintf("The 370");
-break;
-case 12:bprintf("The Hilbert-Space");
-break;
-case 14:bprintf("The Completely Normal Naughty Spud");
-break;
-case 15:bprintf("The Wimbledon Weirdo");
-break;
-case 16:bprintf("The DangerMouse");
-break;
-case 17:bprintf("The Charred Wi");
-if(s) bprintf("tch");
-else bprintf("zard");
-break;
-case 18:bprintf("The Cuddly Toy");
-break;
-case 19:if(!hasfarted) bprintf("Of The Opera");
-else bprintf("Raspberry Blower Of Old London Town");
-break;
-case 20:bprintf("The 50Hz E.R.C.S");
-break;
-case 21:bprintf("who couldn't decide what to call himself");
-break;
-case 22:bprintf("The Summoner");
-break;
-case 10000:
-bprintf("The 159 IQ Mega-Creator");
-break;
-case 10033:
-case 10001:bprintf("The Arch-Wi");
-if(s)bprintf("tch");
-else bprintf("zard");
-break;
-case 10002:bprintf("The Wet Kipper");
-break;
-case 10003:bprintf("The Thingummy");
-break;
-case 68000:
-bprintf("The Wanderer");
-break;
-case -2:
-bprintf("\010");
-break;
-case -11:bprintf("The Broke Dwarf");break;
-case -12:bprintf("The Radioactive Dwarf");break;
-case -10:bprintf("The Heavy-Fan Dwarf");break;
-case -13:bprintf("The Upper Class Dwarven Smith");break;
-case -14:bprintf("The Singing Dwarf");break;
-case -30:bprintf("The Sorceror");break;
-case -31:bprintf("the Acolyte");break;
-       default:
-         bprintf("The Cardboard Box");
-          break;
-          }
+    extern long my_lev;
+    long a;
+    a=my_lev;
+    my_lev=0;
+    whocom();
+    my_lev=a;
     }
-"""
-
-"""
- lispeople()
-    {
-    extern long debug_mode;
-    extern long curch;
-    extern long mynum;
-    extern char wd_him[],wd_her[];
-    long a,b;
-    b=0;
-    a=0;
-    while(a<48)
-       {
-       if(a==mynum)
-          {
-          a++;
-          continue;
-          }
-       if((!!strlen(pname(a)))&&(ploc(a)==curch)&&(seeplayer(a)))
-          {
-          b=1;
-         bprintf("%s ",pname(a));
-         if(debug_mode) bprintf("{%d}",a);
-          disl4(plev(a),psex(a));
-          if(psex(a)) strcpy(wd_her,pname(a));
-          else strcpy(wd_him,pname(a));
-         bprintf(" is here carrying\n");
-          lobjsat(a);
-          }
-       a++;
-       }
-    }
-
-usercom()
-{
-extern long my_lev;
-long a;
-a=my_lev;
-my_lev=0;
-whocom();
-my_lev=a;
-}
-
-oplong(x)
-{
-extern long debug_mode;
-if(debug_mode)
-{
-bprintf("{%d} %s\n",x,olongt(x,state(x)));
-return;
-}
-if(strlen(olongt(x,state(x))))
-    bprintf("%s\n",olongt(x,state(x)));
-}
-
-"""
+    """

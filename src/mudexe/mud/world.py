@@ -42,10 +42,10 @@ class World():
     maxu = 255
 
     def __init__(self):
-        self.players = [None] * self.NUSERS  # ublock
+        self.players = []  # [None] * self.NUSERS  # ublock
         self.filrf = None
         self.numobs = self.NOBS
-        self.objinfo = [None] * self.NOBS
+        self.objects = []  # [None] * self.NOBS  # objinfo
 
         self.usr_start = 350
         self.usr_len = 16

@@ -26,12 +26,8 @@ class Room():
         logger().debug("<<< lodex(%s)", self)
 
     # ???
-    def lisobs(self):
-        logger().debug("<<< lisobs()")
-
-    # ???
-    def lispeople(self):
-        logger().debug("<<< lispeople()")
+    def showwthr(self):
+        logger().debug("<<< showwthr()")
 
     # ???
     def getstr(self):
@@ -42,6 +38,26 @@ class Room():
     def isdark(self):
         logger().debug("<<< is_dark()")
         return True
+
+    def lisobs(self, user):
+        res = ""
+        res += self.lojal2(1, user)
+        res += self.showwthr()
+        res += self.lojal2(0, user)
+
+    def lojal2(self, n, user):
+        res = ""
+        objects = []
+        for a in objects:
+            res += a.lojal2(n, user)
+        return res
+
+    def lispeople(self, user=None):
+        res = ""
+        players = []
+        for a in players:
+            res += a.showto(user)
+        return res
 
     def load(self, un1):
         if un1 is None:
@@ -80,7 +96,7 @@ class Room():
         self.closeroom()
         user.world.openworld()
         if self.cansee(user):
-            res += self.lisobs()
+            res += self.lisobs(user)
             if user.curmode:
-                res += self.lispeople()
+                res += self.lispeople(user)
         return res
