@@ -60,6 +60,10 @@ class Person(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    @property
+    def is_wizzard(self):
+        return self.level > 9
+
 
 class PlayerQuery(PagedQuery):
     def fpbns(self, name):

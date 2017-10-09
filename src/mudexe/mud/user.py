@@ -1,6 +1,7 @@
 from global_vars import logger
 from ..gamego.signals import alarm
-from ..models import Message, User as UserModel, Person, SEX_MALE, SEX_FEMALE
+from ..models import Message, Player, User as UserModel, Person, SEX_MALE, SEX_FEMALE
+from .exceptions import Crapup
 from .textbuff import TextBuffer
 from .room import Room
 from .tty import Terminal, special
@@ -32,6 +33,11 @@ def randperc():
 # ???
 def onlook():
     logger().debug("<<< onlook()")
+
+
+class DeathRoom(Crapup):
+    def __init__(self):
+        Crapup.__init__(self, "bye bye.....")
 
 
 class User():
@@ -75,17 +81,22 @@ class User():
         self.terminal.set_user(self)
         self.world = World()
 
+    # ???
+    def cuserid(self):
+        logger().debug("<<< cuserid(%s)", self)
+        return 0
+
+    # ???
+    def on_timing(self):
+        logger().debug("<<< on_timing()")
+        return 0
+
     @property
     def fullname(self):
         if self.name == "Phantom":
             return "The %s" % (self.name)
         else:
             return self.name
-
-    # ???
-    def cuserid(self):
-        logger().debug("<<< cuserid(%s)", self)
-        return 0
 
     def prepare_game(self):
         self.message_id = None
@@ -170,7 +181,7 @@ class User():
         self.trapch(room)
         self.sendsys(self, -10000, text=xy)
 
-    def sendsys(self, to_user, msg_code, channel=None, text=""):
+    def sendsys(self, to_player, message_code, channel=None, text=""):
         if channel is None:
             channel = self.location
         # if msg_code != -9900 and msg_code != -10021:
@@ -179,15 +190,15 @@ class User():
         #     block[64] = i[0]
         #     block[65] = i[1]
         #     block[66] = i[2]
-        self.send2(to_user, msg_code, channel, text)
+        self.send2(to_player, message_code, channel, text)
 
-    def send2(self, to_user, msg_code, channel, text):
-        if to_user is not None:
-            to_user = to_user.player
+    def send2(self, to_player, message_code, channel, text):
+        if to_player is not None:
+            to_player = to_player.player
         msg = Message(
             from_player=self.player,
-            to_player=to_user,
-            message_code=msg_code,
+            to_player=to_player,
+            message_code=message_code,
             # channel=channel,
             text=text,
         )
@@ -245,7 +256,7 @@ class User():
         r = Room(room)
         if self.ail_blind:
             self.buff.bprintf("You are blind... you can't see a thing!\n")
-        if self.person.level > 9:
+        if self.person.is_wizzard:
             self.buff.bprintf(r.showname())
         self.buff.bprintf(r.look(self))
         self.buff.bprintf("\n")
@@ -254,7 +265,8 @@ class User():
         onlook()
 
     def loseme(self):
-        alarm.sig_aloff()  # No interruptions while you are busy dying
+        alarm.sig_aloff()
+        # No interruptions while you are busy dying
         # ABOUT 2 MINUTES OR SO
         self.i_setup = False
         self.world.openworld()
@@ -271,50 +283,50 @@ class User():
         self.buff.chksnp(sntn, self)
 
     def deathroom(self):
-        if self.person.level > 9:
+        if self.person.is_wizzard:
             self.buff.bprintf("<DEATH ROOM>\n")
         else:
             self.loseme()
-            self.terminal.crapup("bye bye.....\n")
+            raise DeathRoom
 
     @property
     def prmpt(self):
+        convflgs = {
+            0: ">",
+            1: "\"",
+            2: "*",
+        }
         prmpt = ""
         if self.debug_mode:
             prmpt += "#"
-        if self.person.level > 9:
+        if self.person.is_wizzard:
             prmpt += "----"
-        if self.convflg == 0:
-            prmpt += ">"
-        elif self.convflg == 1:
-            prmpt += "\""
-        elif self.convflg == 2:
-            prmpt += "*"
-        else:
-            prmpt += "?"
+        prmpt += convflgs.get(self.convflg, "?")
         if self.player.visibility:
             prmpt = "(%s)" % prmpt
         return "\r" + prmpt
 
+    def end_fight(self):
+        self.in_fight = 0
+        self.fighting = None
+
     def fight_next_round(self):
         if self.fighting:
-            f = self.world.player[self.fighting]
-            if f is None:
-                self.in_fight = 0
-                self.fighting = None
-            elif f.location != self.location:
-                self.in_fight = 0
-                self.fighting = None
+            enemy = Player.query.get(self.fighting)
+            if enemy is None:
+                self.end_fight()
+            elif enemy.location != self.location:
+                self.end_fight()
         if self.in_fight:
             self.in_fight -= 1
 
     def apply_convflg(self, work):
-        if not self.convflg:
+        if self.convflg == 0:
             return work
-        if self.convflg == 1:
-            return "say %s" % (work)
+        elif self.convflg == 1:
+            return self.say(work)
         else:
-            return "tss %s" % (work)
+            return self.tss(work)
 
     def do_loop(self):
         self.buff.pbfr(self)
@@ -330,6 +342,12 @@ class User():
         interrupt = True
         self.rte()
         interrupt = False
-        # on_timing()
+        self.on_timing()
         self.world.closeworld()
         self.terminal.key_reprint()
+
+    def say(self, message=""):
+        return "say %s" % (message)
+
+    def tss(self, message=""):
+        return "tss %s" % (message)
