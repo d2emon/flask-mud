@@ -1,22 +1,13 @@
 from global_vars import logger
+from datetime import datetime
+
 from ..gamego.signals import alarm
-from ..models import Message, Player, User as UserModel, Person, SEX_MALE, SEX_FEMALE
+from ..models import Message, Player, User as UserModel, Person
 from .exceptions import Crapup
 from .textbuff import TextBuffer
 from .room import Room
 from .tty import Terminal, special
 from .world import World
-
-
-sexes = {
-    'm': SEX_MALE,
-    'f': SEX_FEMALE,
-}
-
-
-# ???
-def eorte():
-    logger().debug("<<< eorte()")
 
 
 # ???
@@ -35,6 +26,31 @@ def onlook():
     logger().debug("<<< onlook()")
 
 
+# ???
+def gamecom(msg):
+    logger().debug("<<< gamecom(%s)", msg)
+
+
+# ???
+def calibme():
+    logger().debug("<<< calibme()")
+
+
+# ???
+def hitplayer(enemy, weapon):
+    logger().debug("<<< hitplayer(%s, %s)", enemy, weapon)
+
+
+# ???
+def dosumm(ades):
+    logger().debug("<<< dosumm(%s)", ades)
+
+
+# ???
+def forchk():
+    logger().debug("<<< forchk()")
+
+
 class DeathRoom(Crapup):
     def __init__(self):
         Crapup.__init__(self, "bye bye.....")
@@ -49,6 +65,10 @@ class User():
     in_fight = 0
     # ???
     fighting = None
+    # ???
+    wpnheld = -1
+    # ???
+    ail_dumb = False
 
     def __init__(self, name):
         self.name = name  # globme
@@ -73,6 +93,11 @@ class User():
         self.ades = 0
         self.zapped = False
         self.brmode = False
+        self.interrupt = False
+        self.last_io_interrupt = None
+        self.me_ivct = 0
+        self.me_drunk = 0
+        self.me_cal = 0
 
         # Other
         self.player = None
@@ -127,10 +152,44 @@ class User():
         for message in messages:
             self.mstoout(message)
         self.update()
-        eorte()
+        self.eorte()
         self.rdes = 0
         self.tdes = 0
         self.vdes = 0
+
+    def eorte(self):
+        if self.last_io_interrupt is not None:
+            timeleft = datetime.now() - self.last_io_interrupt
+            if timeleft.seconds > 2:
+                self.interrupt = True
+        else:
+            self.interrupt = True
+        if self.interrupt:
+            self.last_io_interrupt = datetime.now()
+
+        self.invisibility_next_round()
+
+        #
+        if self.me_cal:
+            self.me_cal = 0
+            calibme()
+
+        #
+        if self.tdes:
+            dosumm(self.ades)
+
+        self.fight_next_round()
+        if self.in_fight and self.interrupt:
+            self.in_fight = 0
+            hitplayer(self.fighting, self.wpnheld)
+        # if objects[18].iswornby(self.player) or randperc() < 10:
+        #     self.person.strength += 1
+        #     if self.i_setup:
+        #         calibme()
+        forchk()
+
+        self.drunk_next_round()
+        self.interrupt = False
 
     def update(self):
         xp = self.message_id - self.lasup
@@ -216,17 +275,7 @@ class User():
         if person is None:
             self.buff.bprintf("Creating character....")
             person = Person(user=self.model)
-            sex = None
-            while sex is None:
-                self.buff.bprintf("\nSex (M/F) : ")
-                self.buff.pbfr(self)
-                # self.terminal.keysetback()
-                sex_id = self.terminal.getkbd(1).lower()
-                # self.terminal.keysetup()
-                sex = sexes.get(sex_id)
-                if sex is None:
-                    self.buff.bprintf("M or F")
-            person.sex = sex
+            person.sex = self.terminal.asksex()
         person.save()
         self.person = person
         return person
@@ -320,6 +369,21 @@ class User():
         if self.in_fight:
             self.in_fight -= 1
 
+    def invisibility_next_round(self):
+        """
+        Invisibility counter
+        """
+        if self.me_ivct:
+            self.me_ivct -= 1
+        if self.me_ivct == 1:
+            self.player.visibility = 0
+
+    def drunk_next_round(self):
+        if self.me_drunk > 0:
+            self.me_drunk -= 1
+            if not self.ail_dumb:
+                self.hiccup()
+
     def apply_convflg(self, work):
         if self.convflg == 0:
             return work
@@ -339,9 +403,9 @@ class User():
 
     def next_turn(self):
         self.world.openworld()
-        interrupt = True
+        self.interrupt = True
         self.rte()
-        interrupt = False
+        self.interrupt = False
         self.on_timing()
         self.world.closeworld()
         self.terminal.key_reprint()
@@ -351,3 +415,6 @@ class User():
 
     def tss(self, message=""):
         return "tss %s" % (message)
+
+    def hiccup(self):
+        return gamecom("hiccup")

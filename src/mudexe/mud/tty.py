@@ -3,7 +3,14 @@ Key drivers
 """
 from global_vars import logger
 from ..gamego.signals import alarm
+from ..models import SEX_MALE, SEX_FEMALE
 from .exceptions import Crapup
+
+
+sexes = {
+    'm': SEX_MALE,
+    'f': SEX_FEMALE,
+}
 
 
 # ???
@@ -172,3 +179,16 @@ class Terminal():
         Getstr() with length limit and filter ctrl
         """
         return input()[:l]
+
+    def asksex(self):
+        sex = None
+        while sex is None:
+            self.bprintf("\nSex (M/F) : ")
+            self.pbfr()
+            # self.terminal.keysetback()
+            sex_id = self.getkbd(1).lower()
+            # self.terminal.keysetup()
+            sex = sexes.get(sex_id)
+            if sex is None:
+                self.bprintf("M or F")
+        return sex

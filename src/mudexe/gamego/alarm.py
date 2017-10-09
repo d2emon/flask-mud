@@ -1,16 +1,10 @@
 from ..mud.exceptions import Crapup
 
 
-interrupt = False
-
-
 def occur(user, active=False):
-    global interrupt
     if not active:
         return
-    interrupt = True
     user.next_turn()
-    interrupt = False
 
 
 def ctrlc(user, active=False):

@@ -52,60 +52,65 @@ void pncom()
 		bprintf("There           : %s\n",wd_there);
 	}
 }
+"""
 
-int gamecom(str)
-char *str;
-    {
-    long  a;
-    extern long in_fight;
-    extern long stp;
-    extern char strbuf[];
-    if(strcmp(str,"!")) strcpy(strbuf,str);
-    if(!strcmp(str,".q")) strcpy(str,"");  /* Otherwise drops out after command */
-    stp=0;
-    if(!strlen(str)) return(0);
-    if(!strcmp(str,"!")) strcpy(str,strbuf);
-    if(brkword()== -1)
-       {
-       bprintf("Pardon ?\n");
-       return(-1);
-       }
-    if((a=chkverb())== -1)
-       {
-       bprintf("I don't know that verb\n");
-       return(-1);
-       }
-    doaction(a);
-    return(0);
+
+def gamecom(s):
+    # extern long in_fight;
+    # extern long stp;
+    # extern char strbuf[];
+    if s == "!":
+        strbuf == s
+    if s == ".q":
+        s = ""  # Otherwise drops out after command
+    stp = 0
+    if not len(s):
+        return 0
+    if s == "!":
+        s = strbuf
+    if brkword() is None:
+        bprintf("Pardon ?\n")
+        return -1
+    a = chkverb()
+    if a == -1:
+        bprintf("I don't know that verb\n")
+        return -1
+    doaction(a)
+    return 0
+
+def brkword():
+    # extern char wd_it[],wd_them[],wd_her[],wd_him[],globme[];
+    # extern long stp;
+    # extern char strbuf[],wordbuf[];
+    # x1:
+    worp = 0
+    while strbuf[stp] == ' ':
+        stp += 1
+    while strbuf[stp] and strbuf[stp] != ' ':
+        wordbuf[worp] = strbuf[stp]
+        worp += 1
+        stp += 1
+    wordbuf[worp] = 0
+    wordbuf = wordbuf.lower()
+    replaces = {
+        "it": wd_it,
+        "them": wd_them,
+        "him": wd_him,
+        "her": wd_her,
+        "me": user.name,
+        "myself": user.name,
+        "there": wd_there,
     }
-
-int brkword()
-    {
-    extern char wd_it[],wd_them[],wd_her[],wd_him[],globme[];
-    extern long stp;
-    extern char strbuf[],wordbuf[];
-    int  worp;
-    x1:worp=0;
-    while(strbuf[stp]==' ') stp++;
-    while((strbuf[stp])&&(strbuf[stp]!=' '))
-       {
-       wordbuf[worp++]=strbuf[stp++];
-       }
-    wordbuf[worp]=0;
-    lowercase(wordbuf);
-    if(!strcmp(wordbuf,"it"))strcpy(wordbuf,wd_it);
-    if(!strcmp(wordbuf,"them"))strcpy(wordbuf,wd_them);
-    if(!strcmp(wordbuf,"him"))strcpy(wordbuf,wd_him);
-    if(!strcmp(wordbuf,"her"))strcpy(wordbuf,wd_her);
-    if(!strcmp(wordbuf,"me")) strcpy(wordbuf,globme);
-    if(!strcmp(wordbuf,"myself")) strcpy(wordbuf,globme);
-    if(!strcmp(wordbuf,"there")) strcpy(wordbuf,wd_there);
-    if(worp)return(0);
-    else
-       return(-1);
-    }
+    r = replaces.get(wordbuf, None)
+    if r is not None:
+        wordbuf = r
+    if worp:
+        return 0
+    else:
+        return None
 
 
+"""
 chklist(word,lista,listb)
 char *word;
 char *lista[];
@@ -191,8 +196,11 @@ int verbnum[]={1,1,2,3,4,5,6,7,2,3,4,5,6,7,8,9,9,10,11,12,12,12,13,14
 
 char *exittxt[]={"north","east","south","west","up","down","n","e","s","w","u","d",0};
 long exitnum[]={1,2,3,4,5,6,1,2,3,4,5,6};
+"""
 
- doaction(n)
+
+def doaction(n):
+    """
     {
     char xx[128];
     extern long my_sco;
@@ -664,7 +672,9 @@ long exitnum[]={1,2,3,4,5,6,1,2,3,4,5,6};
           break;
        }
     }
+    """
 
+"""
 char in_ms[81]="has arrived.";
 char out_ms[81]="";
 char mout_ms[81]="vanishes in a puff of smoke.";
@@ -928,82 +938,18 @@ dogocom(n)
           break;
           }
     }
+"""
 
-long me_ivct=0;
-long last_io_interrupt=0;
 
-eorte()
-{
-    extern long mynum,me_ivct;
-    extern long me_drunk;
-    extern long ail_dumb;
-    extern long curch,tdes,rdes,vdes,ades;
-    extern long me_cal;
-    extern long wpnheld;
-    extern long my_str;
-    extern long i_setup;
-    extern long interrupt;
-    extern long fighting,in_fight;
-    long ctm;
-    time(&ctm);
-    if(ctm-last_io_interrupt>2) interrupt=1;
-    if(interrupt) last_io_interrupt=ctm;
-    if(me_ivct) me_ivct--;
-    if(me_ivct==1) setpvis(mynum,0);
-    if(me_cal)
-       {
-       me_cal=0;
-       calibme();
-       }
-    if(tdes) dosumm(ades);
-    if(in_fight)
-    {
-       if(ploc(fighting)!=curch)
-          {
-          fighting= -1;
-          in_fight=0;
-          }
-       if(!strlen(pname(fighting)))
-          {
-          fighting= -1;
-          in_fight=0;
-          }
-       if(in_fight)
-          {
-          if(interrupt)
-             {
-             in_fight=0;
-             hitplayer(fighting,wpnheld);
-             }
-          }
-       }
-    if((iswornby(18,mynum))||(randperc()<10))
-       {
-       my_str++;
-       if(i_setup) calibme();
-       }
-    forchk();
-    if(me_drunk>0)
-       {
-       me_drunk--;
-       if(!ail_dumb) gamecom("hiccup");
-       }
-       interrupt=0;
-    }
+def openroom(n, mod):
+    # long  blob[64];
+    # FILE *x;
+    blob = "%s%d" % (ROOMS, -n)
+    x = fopen(blob, mod)
+    return x
 
-long me_drunk=0;
 
-FILE *openroom(n,mod)
-    {
-    long  blob[64];
-    FILE *x;
-    sprintf(blob,"%s%d",ROOMS,-n);
-    x=fopen(blob,mod);
-    return(x);
-    }
-
-long me_cal=0;
-
+"""
  rescom()
     {
     extern long my_lev;
