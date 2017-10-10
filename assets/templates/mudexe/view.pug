@@ -3,7 +3,7 @@ extends ../_base.pug
 block content
   .content-section
     .game-log
-      p ""
+      p {{time_to_turn}}
     div
       a(href="{{ url_for('mudexe.play_game') }}") Play
     .data

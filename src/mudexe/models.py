@@ -24,7 +24,7 @@ class PersonQuery(PagedQuery):
         else:
             user_id = user.id
 
-        return self.filter_by(user_id=user_id)
+        return self.filter_by(user_id=user_id).first()
 
 
 class Person(db.Model):
@@ -64,7 +64,7 @@ class PlayerQuery(PagedQuery):
         else:
             user_id = user.id
 
-        return self.filter_by(user_id=user_id)
+        return self.filter_by(user_id=user_id).first()
 
     def fpbns(self, name):
         return self.filter_by(name=name).first()

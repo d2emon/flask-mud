@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session
+from datetime import datetime
 
 from app import app
 # from global_vars import logger
@@ -12,8 +13,7 @@ from .models import Player
 from .mud.user import User as GameUser
 
 
-from .gamego.signals import sig_init
-# from .talker import talker
+from .gamego.signals import sig_init, do_signal, SIGALRM
 
 
 mudexe = Blueprint('mudexe', __name__)
@@ -39,9 +39,6 @@ def start_game(username):
         flash(e)
     session["user_id"] = user.id
 
-    # for i in range(5):
-    #     do_signal(SIGALRM, user)
-    # do_signal(SIGTERM, user)
     return render_template(
         'mudexe/start.html',
         title="Entering Game",
@@ -62,8 +59,27 @@ def play_game():
     if user is None:
         return redirect(url_for("mudexe.start_game", username="User"))
 
+    # Get last active
+    last_active = session.get("last_active")
+    if not last_active:
+        last_active = datetime.now()
+        session["last_active"] = last_active
+    timeleft = datetime.now() - last_active
+    if timeleft.seconds > 2:
+        time_to_turn = True
+        session["last_active"] = datetime.now()
+    else:
+        time_to_turn = False
+
+    sig_init()
     game_user = GameUser(user.username)
     user = game_user.model
+    if time_to_turn:
+        do_signal(SIGALRM, game_user)
+
+    game_user.do_loop()
+
+    # do_signal(SIGTERM, user)
     return render_template(
         'mudexe/view.html',
         title="Sessions",
@@ -71,4 +87,6 @@ def play_game():
         users=User.query.all(),
         players=Player.query.all(),
         user_id=session["user_id"],
+
+        time_to_turn=time_to_turn,
     )

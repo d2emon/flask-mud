@@ -109,6 +109,7 @@ class User():
         self.terminal.set_user(self)
         self.world = World()
         self.player = Player.query.by_user(self.model)
+        self.person = Person.query.by_user(self.model)
 
     # ???
     def on_timing(self):
