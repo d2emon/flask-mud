@@ -941,14 +941,6 @@ dogocom(n)
 """
 
 
-def openroom(n, mod):
-    # long  blob[64];
-    # FILE *x;
-    blob = "%s%d" % (ROOMS, -n)
-    x = fopen(blob, mod)
-    return x
-
-
 """
  rescom()
     {

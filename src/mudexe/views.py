@@ -80,7 +80,7 @@ def play_game():
     if time_to_turn:
         do_signal(SIGALRM, terminal)
 
-    game_user.lookin()
+    game_user.look()
 
     terminal.on_text("test text")
     answer = terminal.text

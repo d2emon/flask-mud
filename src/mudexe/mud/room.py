@@ -1,29 +1,53 @@
 from global_vars import logger
 
 
+class Zone():
+    """
+    Zone based name generator
+    """
+    def __init__(self, name="", min_loc=0, max_loc=99999):
+        self.name = name
+        self.min_loc = min_loc
+        self.max_loc = max_loc
+
+
 class Room():
     def __init__(self, room_id):
         self.room_id = room_id
         self.deathroom = False
         self.nobr = False
         self.description = ""
-
-    # ???
-    def showname(self):
-        logger().debug("<<< showname(%d)", self)
-
-    # ???
-    def openroom(self, mode="r"):
-        logger().debug("<<< openroom(%s, %s)", self, mode)
-        return None
+        self.ex_dat = [0] * 7
+        self.zoname = [
+            Zone("LIMBO", 0, 1),
+            Zone("WSTORE", 1, 2),
+            Zone("HOME", 2, 4),
+            Zone("START", 4, 5),
+            Zone("PIT", 5, 6),
+            Zone("WIZROOM", 6, 19),
+            Zone("DEAD", 19, 99),
+            Zone("BLIZZARD", 99, 299),
+            Zone("CAVE", 299, 399),
+            Zone("LABRNTH", 399, 499),
+            Zone("FOREST", 499, 599),
+            Zone("VALLEY", 599, 699),
+            Zone("MOOR", 699, 799),
+            Zone("ISLAND", 799, 899),
+            Zone("SEA", 899, 999),
+            Zone("RIVER", 999, 1049),
+            Zone("CASTLE", 1049, 1069),
+            Zone("TOWER", 1069, 1099),
+            Zone("HUT", 1099, 1101),
+            Zone("TREEHOUSE", 1101, 1105),
+            Zone("QUARRY", 1105, 2199),
+            Zone("LEDGE", 2199, 2299),
+            Zone("INTREE", 2299, 2499),
+            Zone("WASTE", 2499, 99999),
+        ]
 
     # ???
     def closeroom(self):
         logger().debug("<<< fclose(%s)", self)
-
-    # ???
-    def lodex(self):
-        logger().debug("<<< lodex(%s)", self)
 
     # ???
     def showwthr(self):
@@ -38,6 +62,40 @@ class Room():
     def isdark(self):
         logger().debug("<<< is_dark()")
         return True
+
+    @property
+    def name(self):
+        zone, room_id = self.findzone()
+        return "%s%d" % (zone, room_id)
+
+    def openroom(self, mode="r"):
+        # blob = "%s%d" % (ROOMS, -n)
+        # x = fopen(blob, mod)
+        # return x
+        return None
+
+    def findzone(self, room_id=None):
+        if room_id is None:
+            room_id = -self.room_id
+
+        for z in self.zoname:
+            if room_id in range(z.min_loc, z.max_loc):
+                return z, room_id - z.min_loc
+        return Zone("TCHAN"), 0
+
+    def lodex(self):
+        for a in range(7):
+            self.ex_dat[a] = 0
+
+    def showname(self, user):
+        # extern char wd_there[];
+        res = self.name
+        if user.person.level > 9999:
+            res += "[ %s ]" % (self)
+        zone, room_id = self.findzone()
+        wd_there = "%s %d" % (zone, room_id)
+        res += "\n"
+        return res
 
     def lisobs(self, user):
         res = ""

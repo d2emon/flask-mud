@@ -3,34 +3,39 @@ extends ../_base.pug
 block content
   .content-section
     h1 {{terminal.title}}
-    .game-log
-      p {{time_to_turn}}
-      pre
-        | {{text1}}
-      hr 
-      pre
-        | {{text}}
-    div
-      form
-        | {{prompt}}
-        input(type="text")
-    div
-      a(href="{{ url_for('mudexe.play_game') }}") Play
-    .data
-      | {% if users %}
-      ul.users
-        | {% for u in users %}
-        li {{u.username}}
-        | {% endfor %}
-      | {% else %}
-      div No users
-      | {% endif %}
+    .row
+      .col-md-8
+        p {{time_to_turn}}
+        .row
+          .col-md-6
+            .game-log
+              pre
+                | {{text1}}
+          .col-md-6
+            pre
+              | {{text}}
+        div
+          form
+            | {{prompt}}
+            input(type="text")
+        div
+          a(href="{{ url_for('mudexe.play_game') }}") Play
+      .col-md-4
+        .data
+          | {% if users %}
+          ul.users
+            | {% for u in users %}
+            li {{u.username}}
+            | {% endfor %}
+          | {% else %}
+          div No users
+          | {% endif %}
 
-      | {% if players %}
-      ul.players
-        | {% for p in players %}
-        li {{p.name}}
-        | {% endfor %}
-      | {% else %}
-      div No players
-      | {% endif %}
+          | {% if players %}
+          ul.players
+            | {% for p in players %}
+            li {{p.name}}
+            | {% endfor %}
+          | {% else %}
+          div No players
+          | {% endif %}

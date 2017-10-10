@@ -418,7 +418,7 @@ class User():
 
         roomname = ""
         if self.person.is_wizzard:
-            roomname = r.showname()
+            roomname = r.showname(self)
 
         description = r.look(self)
 
