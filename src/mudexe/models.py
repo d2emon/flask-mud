@@ -55,6 +55,17 @@ class Person(db.Model):
 
 
 class PlayerQuery(PagedQuery):
+    def by_user(self, user=None):
+        '''
+        Return block data for user or -1 if not exist
+        '''
+        if user is None:
+            user_id = 0
+        else:
+            user_id = user.id
+
+        return self.filter_by(user_id=user_id)
+
     def fpbns(self, name):
         return self.filter_by(name=name).first()
 
@@ -83,10 +94,22 @@ class Player(db.Model):
     strength = db.Column(db.Integer, default=-1, info={'label': "Strength"})  # str 7
     weapon = db.Column(db.Integer, default=-1, info={'label': "Weapon"})  # wpn 11
     helping = db.Column(db.Integer, default=-1, info={'label': "Helping"})  # helping 13
-    sex = db.Column(db.Integer, default=0, info={'label': "Sex"})  # sex 9
+    sex = db.Column(db.Integer, default=SEX_MALE, info={'label': "Sex"})  # sex 9
 
     user = db.relationship('User', backref='players')
     last_message = db.relationship('Message', foreign_keys=[message_id, ])
+
+    def puton(self):
+        if self.user:
+            self.name = self.user.name
+            self.location = self.user.location
+        self.last_message = None
+        self.level = 1
+        self.visibility = 0
+        self.strength = -1
+        self.weapon = -1
+        self.sex = SEX_MALE
+        self.save()
 
     def delete(self):
         db.session.delete(self)

@@ -2,8 +2,9 @@ extends ../_base.pug
 
 block content
   .content-section
+    h1 Entering Game ....
     .game-log
-      p ""
+      p Hello {{user.fullname}}
     div
       a(href="{{ url_for('mudexe.play_game') }}") Play
     .data

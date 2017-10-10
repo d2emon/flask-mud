@@ -96,23 +96,15 @@ class World():
         # fcloselock(self.filrf)
         self.filrf = None
 
-    def find_empty(self, user):
+    def put_player(self, user):
         self.openworld()
-        if Player.query.fpbn(user.name):
+        if Player.query.fpbn(user.model.username):
             raise AlreadyOnMud()
         if len(Player.query.all()) > self.maxu:
             raise MudFull()
-        return Player(
-            user=user.model,
-            name=user.name,
-            location=user.location,
-            last_message=None,
-            level=1,
-            visibility=0,
-            strength=-1,
-            weapon=-1,
-            sex=0,
-        )
+        player = Player(user=user.model)
+        player.puton()
+        return player
 
     def dumpstuff(self, n, loc):
         for b in self.objects:

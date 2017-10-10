@@ -85,7 +85,7 @@ class User():
         self.location = 0  # curch
 
         self.i_setup = False
-        self.mynum = 0
+        # self.mynum = 0
         self.iamon = False
         self.lasup = 0
         self.curmode = 0
@@ -104,16 +104,11 @@ class User():
         self.me_cal = 0
 
         # Other
-        self.player = None
         self.buff = TextBuffer()
         self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
         self.terminal.set_user(self)
         self.world = World()
-
-    # ???
-    def cuserid(self):
-        logger().debug("<<< cuserid(%s)", self)
-        return 0
+        self.player = Player.query.by_user(self.model)
 
     # ???
     def on_timing(self):
@@ -129,9 +124,10 @@ class User():
 
     def prepare_game(self):
         self.message_id = None
-        self.putmeon()
+        self.put_player()
         self.rte()
         self.world.closeworld()
+
         self.message_id = None
         self.special(".g")
         self.i_setup = True
@@ -139,13 +135,14 @@ class User():
     def special(self, cmd):
         special(cmd, self)
 
-    def putmeon(self):
+    def put_player(self):
+        """
+        PutMeOn
+        """
         self.iamon = False
-        self.player = self.world.find_empty(self)
-        self.mynum = self.player.id
-        self.player.save()
+        self.player = self.world.put_player(self)
         self.iamon = True
-        return True
+        return self.player
 
     def rte(self):
         self.world.openworld()

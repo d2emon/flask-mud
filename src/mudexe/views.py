@@ -25,6 +25,11 @@ def start_game(username):
     Render start page
     """
     sig_init()
+
+    user_id = session.get("user_id", 0)
+    if user_id:
+        return redirect(url_for("mudexe.play_game"))
+
     game_user = GameUser(username)
     user = game_user.model
     app.logger.info("GAME ENTRY: %s[%s]", user.fullname, user.uid)
@@ -38,8 +43,8 @@ def start_game(username):
     #     do_signal(SIGALRM, user)
     # do_signal(SIGTERM, user)
     return render_template(
-        'mudexe/view.html',
-        title="Sessions",
+        'mudexe/start.html',
+        title="Entering Game",
         user=game_user,
         users=User.query.all(),
         players=Player.query.all(),
@@ -52,7 +57,7 @@ def play_game():
     """
     Render game page
     """
-    user_id = session["user_id"]
+    user_id = session.get("user_id", 0)
     user = User.query.get(user_id)
     if user is None:
         return redirect(url_for("mudexe.start_game", username="User"))
