@@ -116,12 +116,17 @@ class User():
         logger().debug("<<< on_timing()")
         return 0
 
-    @property
-    def fullname(self):
-        if self.name == "Phantom":
-            return "The %s" % (self.name)
-        else:
-            return self.name
+    def time_to_interrupt(self):
+        if self.last_io_interrupt is None:
+            self.last_io_interrupt = datetime.now()
+            return True
+
+        timeleft = datetime.now() - self.last_io_interrupt
+        if timeleft.seconds > 2:
+            self.last_io_interrupt = datetime.now()
+            return True
+
+        return self.interrupt
 
     def prepare_game(self):
         self.message_id = None
@@ -160,34 +165,30 @@ class User():
         self.vdes = 0
 
     def eorte(self):
-        if self.last_io_interrupt is not None:
-            timeleft = datetime.now() - self.last_io_interrupt
-            if timeleft.seconds > 2:
-                self.interrupt = True
-        else:
-            self.interrupt = True
+        self.interrupt = self.time_to_interrupt()
         if self.interrupt:
             self.last_io_interrupt = datetime.now()
 
+        # Tick invisibility counter
         self.invisibility_next_round()
 
-        #
+        # Calibration needed
         if self.me_cal:
             self.me_cal = 0
             calibme()
 
-        #
+        # Is summonned
         if self.tdes:
             dosumm(self.ades)
 
-        self.fight_next_round()
-        if self.in_fight and self.interrupt:
-            self.in_fight = 0
-            hitplayer(self.fighting, self.wpnheld)
+        # Is fighting
+        self.fight_next_round(interrupt=self.interrupt)
+
         # if objects[18].iswornby(self.player) or randperc() < 10:
         #     self.person.strength += 1
         #     if self.i_setup:
         #         calibme()
+
         forchk()
 
         self.drunk_next_round()
@@ -297,24 +298,6 @@ class User():
         self.player.location = chan
         self.lookin()
 
-    def lookin(self, room=None):
-        """
-        Lords ????
-        """
-        if room is None:
-            room = self.location
-        self.world.closeworld()
-        r = Room(room)
-        if self.ail_blind:
-            self.buff.bprintf("You are blind... you can't see a thing!\n")
-        if self.person.is_wizzard:
-            self.buff.bprintf(r.showname())
-        self.buff.bprintf(r.look(self))
-        self.buff.bprintf("\n")
-        if r.deathroom:
-            self.deathroom()
-        onlook()
-
     def loseme(self):
         alarm.sig_aloff()
         # No interruptions while you are busy dying
@@ -361,15 +344,23 @@ class User():
         self.in_fight = 0
         self.fighting = None
 
-    def fight_next_round(self):
-        if self.fighting:
-            enemy = Player.query.get(self.fighting)
-            if enemy is None:
-                self.end_fight()
-            elif enemy.location != self.location:
-                self.end_fight()
+    def fight_next_round(self, interrupt=False):
+        if self.fighting is None:
+            return
+
+        enemy = Player.query.get(self.fighting)
+        if enemy is None:
+            self.end_fight()
+        elif enemy.location != self.location:
+            self.end_fight()
+
         if self.in_fight:
             self.in_fight -= 1
+
+        if interrupt:
+            if self.in_fight:
+                self.in_fight = 0
+                hitplayer(self.fighting, self.wpnheld)
 
     def invisibility_next_round(self):
         """
@@ -395,13 +386,12 @@ class User():
             return self.tss(work)
 
     def next_turn(self):
-        self.world.openworld()
         self.interrupt = True
         self.rte()
         self.interrupt = False
         self.on_timing()
-        self.world.closeworld()
 
+    # Actions
     def say(self, message=""):
         return "say %s" % (message)
 
@@ -410,3 +400,56 @@ class User():
 
     def hiccup(self):
         return gamecom("hiccup")
+
+    def look(self, room=None):
+        """
+        Lords ????
+        """
+        if room is None:
+            room = self.location
+
+        self.world.closeworld()
+
+        r = Room(room)
+
+        blind_msg = ""
+        if self.ail_blind:
+            blind_msg = "You are blind... you can't see a thing!\n"
+
+        roomname = ""
+        if self.person.is_wizzard:
+            roomname = r.showname()
+
+        description = r.look(self)
+
+        if r.nobr:
+            self.brmode = False
+
+        if r.deathroom:
+            self.ail_blind = False
+
+        if self.ail_blind:
+            description = ""
+
+        if self.brmode:
+            description = ""
+
+        text = "%s%s%s\n" % (
+            blind_msg,
+            roomname,
+            r.look(self),
+        )
+        self.buff.bprintf(text)
+        if r.deathroom:
+            self.ail_blind = False
+            self.deathroom()
+
+        obs = ""
+        people = ""
+        if r.cansee(self):
+            obs = r.lisobs(self)
+            if self.curmode:
+                pepople = self.lispeople(self)
+        self.buff.bprintf("%s%s" % (obs, people))
+
+        onlook()

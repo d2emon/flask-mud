@@ -81,25 +81,17 @@ class Room():
         return not self.isdark() and not user.ail_blind
 
     def look(self, user):
-        res = ""
         un1 = self.openroom()
         self.load(un1)
-        if self.nobr:
-            user.brmode = False
-        if self.deathroom:
-            user.ail_blind = False
         if self.isdark():
-            res += "It is dark\n"
+            self.closeroom()
+            user.world.openworld()
+            return "It is dark\n"
         if not user.ail_blind and not user.brmode:
-            res += self.description
-
-        self.closeroom()
-        user.world.openworld()
-        if self.cansee(user):
-            res += self.lisobs(user)
-            if user.curmode:
-                res += self.lispeople(user)
-        return res
+            self.closeroom()
+            user.world.openworld()
+            return self.description
+        return ""
 
     def lobjsat(self, user):
         self.aobjsat(1, user)

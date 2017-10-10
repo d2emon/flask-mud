@@ -5,6 +5,7 @@ from global_vars import logger
 from ..gamego.signals import alarm
 from ..models import SEX_MALE, SEX_FEMALE
 from .exceptions import Crapup
+from .world import World
 
 
 sexes = {
@@ -43,6 +44,7 @@ class Terminal():
         # Buffer
         self.buff = None
         self.user = None
+        self.world = World()
 
         # self.tty = 0
         # if self.tty == 4:
@@ -290,5 +292,7 @@ class PageTerminal(Terminal):
         self.pbfr()
 
     def next_turn(self):
+        self.world.openworld()
         self.user.next_turn()
         self.key_reprint()
+        self.world.closeworld()
