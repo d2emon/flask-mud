@@ -2,98 +2,16 @@ from global_vars import logger
 from ..gamego.signals import alarm
 
 
-class Snoop():
-    def __init__(self, player, per="a"):
-        self.fln = self.opensnoop(player, per)
-
-    def opensnoop(self, player, per="a"):
-        # f = "%s%s" % (SNOOP, player.name)
-        # return openlock(f, per)
-        return 0
-
-    def closesnoop(self):
-        logger().debug("<<< fcloselock(%s)" % (self))
-
-
-class TextBuffer():
-    # ???
-    rd_qd = False
-
+class BaseOutput():
     def __init__(self):
-        self.log_fl = None  # 0 = not logging
-        self.pr_qcr = False
-        self.pr_due = False
-        self.iskb = True
-        self.snoopd = None
-        self.snoopt = None
-        self.sntn = None
+        self.text = ""
 
-        self.makebfr()
+    def output(self, text_buffer, text=None):
+        if text is None:
+            text = text_buffer.sysbuf
+        self.text += self.dcprnt(text)
 
-    def makebfr(self):
-        self.sysbuf = ""
-
-    def pbfr(self, user):
-        res = ""
-        alarm.block_alarm()
-        user.world.closeworld()
-        if len(self.sysbuf):
-            self.pr_due = True
-
-        if len(self.sysbuf) and self.pr_qcr:
-            res += "\n"
-
-        self.pr_qcr = False
-        if self.log_fl is not None:
-            self.iskb = False
-            self.dcprnt(f=self.log_fl)
-        if self.snoopd is not None:
-            sn = Snoop(self.snoopd)
-            if sn.fln > 0:
-                self.iskb = False
-                self.dcprnt(f=sn.fln)
-                sn.closesnoop()
-        self.iskb = True
-        res += self.dcprnt()
-        self.sysbuf = ""  # clear buffer
-        if self.snoopt is not None:
-            self.viewsnoop()
-        alarm.unblock_alarm()
-        print(res)
-        return res
-
-    def bprintf(self, msg):
-        if len(msg) > 235:
-            logger().error("Bprintf Short Buffer overflow")
-            # crapup("Internal Error in BPRINTF")
-        # Now we have a string of chars expanded
-        self.quprnt(msg)
-
-    def quprnt(self, msg):
-        if len(msg) + len(self.sysbuf) > 4095:
-            self.sysbuf = ""
-            # loseme()
-            logger().error("Buffer overflow on user %s", "globme")
-            # crapup("PANIC - Buffer overflow")
-        self.sysbuf += msg
-
-    def viewsnoop(self, user):
-        sn = Snoop(user.player, "r+")
-        if self.snoopt is None:
-            return
-        if sn.fln == 0:
-            return
-        # while not feof(fx) and fgets(z, 127, fx):
-        #     print("|%s" % (z))
-        # ftruncate(fileno(fx), 0)
-        # fcloselock(fx)
-
-        # x = self.snoopt
-        # self.snoopt = None
-        # # self.pbfr()
-        # self.snoopt = x
-
-    def dcprnt(self, text=None, f=None):
+    def dcprnt(self, text="", output=None):
         """
         The main loop
         ct = 0
@@ -134,12 +52,122 @@ class TextBuffer():
                 loseme()
                 crapup("Internal $ control sequence error\n")
         """
-        if text is None:
-            text = self.sysbuf
-        if f is None:
-            return text
+        return text
+
+
+class TextOutput(BaseOutput):
+    def output(self, text_buffer, text=None):
+        text_buffer.iskb = True
+        BaseOutput.output(self, text_buffer, text)
+
+
+class LogOutput(TextOutput):
+    def output(self, text_buffer, text=None):
+        text_buffer.iskb = False
+        BaseOutput.output(self, text_buffer, text)
+        # text_buffer.dcprnt(f="log_fl")
+
+
+class SnoopOutput(TextOutput):
+    def __init__(self, player=None, per="a"):
+        if player is not None:
+            self.fln = self.opensnoop(player, per)
         else:
-            return "%s:\t%s" % (f, text)
+            self.fln = None
+
+    def output(self, text_buffer, text=None):
+        if self.fln is None:
+            return
+        text_buffer.iskb = False
+        BaseOutput.output(self, text_buffer, text)
+        # text_buffer.dcprnt(f=sn.fln)
+        self.closesnoop()
+
+    def opensnoop(self, player, per="a"):
+        # f = "%s%s" % (SNOOP, player.name)
+        # return openlock(f, per)
+        return 0
+
+    def closesnoop(self):
+        logger().debug("<<< fcloselock(%s)" % (self))
+
+    def viewsnoop(self):
+        if self.fln is None:
+            return
+        # while not feof(fx) and fgets(z, 127, fx):
+        #     print("|%s" % (z))
+        # ftruncate(fileno(fx), 0)
+        # fcloselock(fx)
+
+        # x = self.snoopt
+        # self.snoopt = None
+        # # self.pbfr()
+        # self.snoopt = x
+
+
+class TextBuffer():
+    # ???
+    rd_qd = False
+
+    def __init__(self):
+        self.log_fl = None  # 0 = not logging
+        self.pr_qcr = False
+        self.pr_due = False
+        self.iskb = True
+        self.snoopd = None
+        self.snoopt = None
+        self.sntn = None
+
+        self.makebfr()
+        self.output = TextOutput()
+
+    def makebfr(self):
+        self.sysbuf = ""
+
+    def pbfr(self, user):
+        self.output.text = ""
+        alarm.block_alarm()
+        user.world.closeworld()
+        if len(self.sysbuf):
+            self.pr_due = True
+
+        if len(self.sysbuf) and self.pr_qcr:
+            self.output.text += "\n"
+
+        self.pr_qcr = False
+        if self.log_fl is not None:
+            self.log_fl.output(self)
+        if self.snoopd is not None:
+            SnoopOutput(self.snoopd).output(self)
+        self.output.output(self)
+
+        self.sysbuf = ""  # clear buffer
+        if self.snoopt is not None:
+            self.viewsnoop()
+        alarm.unblock_alarm()
+        print(self.output.text)
+        return self.output.text
+
+    def bprintf(self, msg):
+        if len(msg) > 235:
+            logger().error("Bprintf Short Buffer overflow")
+            # crapup("Internal Error in BPRINTF")
+        # Now we have a string of chars expanded
+        self.quprnt(msg)
+
+    def quprnt(self, msg):
+        if len(msg) + len(self.sysbuf) > 4095:
+            self.sysbuf = ""
+            # loseme()
+            logger().error("Buffer overflow on user %s", "globme")
+            # crapup("PANIC - Buffer overflow")
+        self.sysbuf += msg
+
+    def viewsnoop(self, user):
+        sn = SnoopOutput(user.player, "r+")
+        if self.snoopt is None:
+            return
+        sn.viewsnoop()
 
     def chksnp(self, sntn, user):
         self.sntn = sntn
