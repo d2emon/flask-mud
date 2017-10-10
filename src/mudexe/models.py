@@ -1,5 +1,6 @@
 from app import db
 from app.models import PagedQuery
+# from auth.models import User
 from sqlalchemy import desc
 from global_vars import logger
 
@@ -24,18 +25,6 @@ class PersonQuery(PagedQuery):
             user_id = user.id
 
         return self.filter_by(user_id=user_id)
-
-
-class User(db.Model):
-    """
-    Create a User table
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), info={'label': "Name"})
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
 
 
 class Person(db.Model):

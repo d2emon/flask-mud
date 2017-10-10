@@ -1,5 +1,5 @@
 from flask import render_template
-from app import app, cache
+from app import app, cache, login_manager
 
 
 @app.context_processor

@@ -2,12 +2,26 @@ extends ../_base.pug
 
 block content
   .content-section
-    | {% if session.title %}
-    h1 {{session.title}}
-    h2 {{session.real_date}}
-    | {% else %}
-    h1 {{session.real_date}}
-    | {% endif %}
-    h3 {{session.campaign}}
+    .game-log
+      p Entering Game ....
+      p Hello {{user.fullname}}
+    div
+      a(href="{{ url_for('mudexe.play_game') }}") Play
+    .data
+      | {% if users %}
+      ul.users
+        | {% for u in users %}
+        li {{u.username}}
+        | {% endfor %}
+      | {% else %}
+      div No users
+      | {% endif %}
 
-    div {{session.description}}
+      | {% if players %}
+      ul.players
+        | {% for p in players %}
+        li {{p.name}}
+        | {% endfor %}
+      | {% else %}
+      div No players
+      | {% endif %}

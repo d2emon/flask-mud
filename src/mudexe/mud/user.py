@@ -1,8 +1,12 @@
 from global_vars import logger
 from datetime import datetime
 
+
+from auth.models import User as UserModel
+
+
 from ..gamego.signals import alarm
-from ..models import Message, Player, User as UserModel, Person
+from ..models import Message, Player, Person
 from .exceptions import Crapup
 from .textbuff import TextBuffer
 from .room import Room
@@ -72,9 +76,9 @@ class User():
 
     def __init__(self, name):
         self.name = name  # globme
-        self.model = UserModel.query.filter_by(name=self.name).first()
+        self.model = UserModel.query.by_username(self.name)
         if self.model is None:
-            self.model = UserModel(name=self.name)
+            self.model = UserModel(username=self.name)
             self.model.save()
 
         self.message_id = None  # cms

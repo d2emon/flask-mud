@@ -4,6 +4,7 @@ from flask_cache import Cache
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_script import Manager
+from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_utils import FlaskUtils
 from config import app_config
@@ -45,16 +46,15 @@ db.create_all()
 
 migrate = Migrate(app, db)
 
-
-# Session(app)
+session = Session(app)
 
 # Importing blueprints
 # from home import *
-# from auth import *
+from auth import *
 # from admin import *
 
 # app.register_blueprint(home_blueprint)
-# app.register_blueprint(auth_blueprint)
+app.register_blueprint(auth_blueprint)
 # app.register_blueprint(admin_blueprint, url_prefix='/admin')
 
 from installer import *
