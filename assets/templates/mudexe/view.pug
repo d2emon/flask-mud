@@ -2,8 +2,18 @@ extends ../_base.pug
 
 block content
   .content-section
+    h1 {{terminal.title}}
     .game-log
       p {{time_to_turn}}
+      pre
+        | {{text1}}
+      hr 
+      pre
+        | {{text}}
+    div
+      form
+        | {{prompt}}
+        input(type="text")
     div
       a(href="{{ url_for('mudexe.play_game') }}") Play
     .data

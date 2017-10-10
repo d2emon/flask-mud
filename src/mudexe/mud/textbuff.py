@@ -34,14 +34,14 @@ class TextBuffer():
         self.sysbuf = ""
 
     def pbfr(self, user):
+        res = ""
         alarm.block_alarm()
         user.world.closeworld()
         if len(self.sysbuf):
             self.pr_due = True
 
         if len(self.sysbuf) and self.pr_qcr:
-            # putchar('\n')
-            print("\n")
+            res += "\n"
 
         self.pr_qcr = False
         if self.log_fl is not None:
@@ -54,11 +54,13 @@ class TextBuffer():
                 self.dcprnt(f=sn.fln)
                 sn.closesnoop()
         self.iskb = True
-        self.dcprnt()
+        res += self.dcprnt()
         self.sysbuf = ""  # clear buffer
         if self.snoopt is not None:
             self.viewsnoop()
         alarm.unblock_alarm()
+        print(res)
+        return res
 
     def bprintf(self, msg):
         if len(msg) > 235:
@@ -135,9 +137,9 @@ class TextBuffer():
         if text is None:
             text = self.sysbuf
         if f is None:
-            print(text)
+            return text
         else:
-            print("%s:\t%s" % (f, text))
+            return "%s:\t%s" % (f, text)
 
     def chksnp(self, sntn, user):
         self.sntn = sntn

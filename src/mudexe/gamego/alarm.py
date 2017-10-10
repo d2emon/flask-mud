@@ -1,24 +1,24 @@
 from ..mud.exceptions import Crapup
 
 
-def occur(user, active=False):
+def occur(terminal, active=False):
     if not active:
         return
-    user.next_turn()
+    terminal.next_turn()
 
 
-def ctrlc(user, active=False):
+def ctrlc(terminal, active=False):
     print("^C")
-    if user.in_fight:
+    if terminal.user.in_fight:
         return
-    user.loseme()
+    terminal.user.loseme()
     try:
-        raise Crapup("Byeeeeeeeeee  ...........", terminal=user.terminal)
+        raise Crapup("Byeeeeeeeeee  ...........", terminal=terminal)
     except Crapup as e:
         print(e)
         exit(0)
 
 
-def oops(user, active=False):
-    user.loseme()
+def oops(terminal, active=False):
+    terminal.user.loseme()
     exit(255)

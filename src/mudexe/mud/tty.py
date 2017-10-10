@@ -51,39 +51,19 @@ class Terminal():
         #     self.topscr()
 
     def set_user(self, user):
+        # user.terminal = self
         self.user = user
         self.buff = user.buff
 
     @property
+    def input_text(self):
+        res = self.__input_text
+        self.__input_text = ""
+        return res
+
+    @property
     def title(self):
         return self.args[0]
-
-    def initscr(self):
-        pass
-
-    def btmscr(self):
-        c_start = chr(int("2517", 16))
-        c_fill = chr(int("2501", 16))
-        c_finish = chr(int("251B", 16))
-        print(c_start + c_fill * 100 + c_finish)
-
-    def topscr(self):
-        c_start = chr(int("250F", 16))
-        c_fill = chr(int("2501", 16))
-        c_finish = chr(int("2513", 16))
-        print(c_start + c_fill * 100 + c_finish)
-
-    def show_top(self):
-        self.pbfr()
-        if self.tty == 4:
-            self.topscr()
-        self.pbfr()
-
-    def show_bottom(self):
-        self.pbfr()
-        if self.tty == 4:
-            self.btmscr()
-        self.pbfr()
 
     def set_progname(self, p_id=0, title=""):
         """
@@ -97,56 +77,86 @@ class Terminal():
         strcpy(argv_p[n],text);
         """
         self.args[p_id] = title
-        border = chr(int("2503", 16))
-        print(border + "\t" + self.title + "\t" + border)
 
-    def key_input(self, prmpt, max_len):
+    def initscr(self):
+        pass
+
+    def btmscr(self):
+        pass
+
+    def topscr(self):
+        pass
+
+    def show_top(self):
+        self.pbfr()
+        if self.tty == 4:
+            self.topscr()
+        self.pbfr()
+
+    def show_bottom(self):
+        self.pbfr()
+        if self.tty == 4:
+            self.btmscr()
+        self.pbfr()
+
+    def get_prmpt(self, prmpt):
         self.key_mode = 0
         self.pr_bf = prmpt
         self.bprintf(prmpt)
         self.pbfr()
         self.buff.pr_due = False
-        self.key_buff = input(prmpt)[:max_len]
+        self.prmpt = prmpt
+        return prmpt
+
+    def key_input(self, prmpt, max_len):
+        self.get_prmpt(prmpt)
+        self.key_buff = self.input_text[:max_len]
         self.key_mode = -1
         return self.key_buff
 
     def key_reprint(self):
         self.buff.pr_qcr = True
-        self.pbfr()
+        res = self.pbfr()
         if self.key_mode == 0 and self.pr_due:
-            print("\n%s%s" % (self.pr_bf, self.key_buff))
+            res += "\n%s%s" % (self.pr_bf, self.key_buff)
         self.buff.pr_due = 0
         # fflush(stdout)
-
-    def pbfr(self):
-        self.buff.pbfr(self.user)
+        return res
 
     def bprintf(self, text):
         self.buff.sysbuf += text
 
+    def pbfr(self):
+        return self.buff.pbfr(self.user)
+
     def crapup(self, s):
         raise Crapup(s, terminal=self)
 
-    def sendmsg(self, user=None):
+    def sendmsg_before(self, user=None):
         if user is None:
             user = self.user
+
+        program_title = None
+        if user.player.visibility > 9999:
+            program_title = "-csh"
+        elif user.player.visibility == 0:
+            program_title = "   --}----- ABERMUD -----{--     Playing as %s" % user.name
 
         # Bottom screen
         self.show_bottom()
 
         # Set program title
-        if user.player.visibility > 9999:
+        if program_title is not None:
             self.set_progname(
-                title="-csh"
-            )
-        elif user.player.visibility == 0:
-            self.set_progname(
-                title="   --}----- ABERMUD -----{--     Playing as %s" % user.name
+                title=program_title
             )
 
         # Input from keyboard
         alarm.sig_alon()
-        work = self.key_input(user.prmpt, 80)
+        return self.get_prmpt(user.prmpt)
+
+    def sendmsg_after(self, input_text="", user=None):
+        work = input_text
         alarm.sig_aloff()
 
         # Top screen
@@ -178,7 +188,7 @@ class Terminal():
         """
         Getstr() with length limit and filter ctrl
         """
-        return input()[:l]
+        return self.input_text[:l]
 
     def asksex(self):
         sex = None
@@ -192,3 +202,93 @@ class Terminal():
             if sex is None:
                 self.bprintf("M or F")
         return sex
+
+
+class CliTerminal(Terminal):
+    @property
+    def input_text(self):
+        res = self.__input_text
+        self.__input_text = input(self.prmpt)
+        return res
+
+    def set_progname(self, p_id=0, title=""):
+        Terminal.set_progname(self, p_id, title)
+        border = chr(int("2503", 16))
+        print(border + "\t" + self.title + "\t" + border)
+
+    def btmscr(self):
+        c_start = chr(int("2517", 16))
+        c_fill = chr(int("2501", 16))
+        c_finish = chr(int("251B", 16))
+        print(c_start + c_fill * 100 + c_finish)
+
+    def topscr(self):
+        c_start = chr(int("250F", 16))
+        c_fill = chr(int("2501", 16))
+        c_finish = chr(int("2513", 16))
+        print(c_start + c_fill * 100 + c_finish)
+
+    def key_reprint(self):
+        res = Terminal.key_reprint(self)
+        print(res)
+        return res
+
+    def send_msg(self, user):
+        self.sendmsg_before(user)
+        work = self.key_input(user.prmpt, 80)
+        self.sendmsg_after(work, user)
+
+
+class PageTerminal(Terminal):
+    def __init__(self, *args):
+        Terminal.__init__(self, *args)
+        self.prmpt = "?"
+        self.__input_text = ""
+        self.text = ""
+
+    @property
+    def input_text(self):
+        res = self.__input_text
+        self.__input_text = "???\n"
+        return res
+
+    def key_reprint(self):
+        res = Terminal.key_reprint(self)
+        self.text += res
+        return res
+
+    def pbfr(self):
+        res = self.buff.pbfr(self.user)
+        self.text += res
+        return res
+
+    def asksex(self):
+        sex = None
+        while sex is None:
+            self.bprintf("\nSex (M/F) : ")
+            self.pbfr()
+            # self.terminal.keysetback()
+            sex_id = self.getkbd(1).lower()
+            # self.terminal.keysetup()
+            sex = sexes.get(sex_id)
+            if sex is None:
+                self.bprintf("M or F")
+        return sex
+
+    def do_loop(self):
+        self.pbfr()
+        self.sendmsg_before(self.user)
+
+    def on_text(self, text):
+        self.sendmsg_after(text, self.user)
+
+        if self.buff.rd_qd:
+            self.user.rte()
+        self.buff.rd_qd = False
+
+        self.user.world.closeworld()
+        self.pbfr()
+
+    def next_turn(self):
+        self.user.next_turn()
+        self.key_reprint()

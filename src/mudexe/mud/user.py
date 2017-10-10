@@ -10,7 +10,7 @@ from ..models import Message, Player, Person
 from .exceptions import Crapup
 from .textbuff import TextBuffer
 from .room import Room
-from .tty import Terminal, special
+from .tty import special
 from .world import World
 
 
@@ -105,8 +105,8 @@ class User():
 
         # Other
         self.buff = TextBuffer()
-        self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
-        self.terminal.set_user(self)
+        # self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
+        # self.terminal.set_user(self)
         self.world = World()
         self.player = Player.query.by_user(self.model)
         self.person = Person.query.by_user(self.model)
@@ -394,15 +394,6 @@ class User():
         else:
             return self.tss(work)
 
-    def do_loop(self):
-        self.buff.pbfr(self)
-        self.terminal.sendmsg(self)
-        if self.buff.rd_qd:
-            self.rte()
-        self.buff.rd_qd = False
-        self.world.closeworld()
-        self.buff.pbfr(self)
-
     def next_turn(self):
         self.world.openworld()
         self.interrupt = True
@@ -410,7 +401,6 @@ class User():
         self.interrupt = False
         self.on_timing()
         self.world.closeworld()
-        self.terminal.key_reprint()
 
     def say(self, message=""):
         return "say %s" % (message)

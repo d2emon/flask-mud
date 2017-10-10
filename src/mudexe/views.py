@@ -11,6 +11,7 @@ from .models import Player
 
 
 from .mud.user import User as GameUser
+from .mud.tty import PageTerminal
 
 
 from .gamego.signals import sig_init, do_signal, SIGALRM
@@ -71,22 +72,34 @@ def play_game():
     else:
         time_to_turn = False
 
+    terminal = PageTerminal("MUD_PROGRAM_NAME", user.username)
+
     sig_init()
     game_user = GameUser(user.username)
-    user = game_user.model
+    terminal.set_user(game_user)
     if time_to_turn:
-        do_signal(SIGALRM, game_user)
+        do_signal(SIGALRM, terminal)
 
-    game_user.do_loop()
+    game_user.lookin()
 
-    # do_signal(SIGTERM, user)
+    terminal.on_text("test text")
+    answer = terminal.text
+
+    terminal.text = ""
+    terminal.do_loop()
+
+    # do_signal(SIGTERM, terminal)
     return render_template(
         'mudexe/view.html',
-        title="Sessions",
+        title=terminal.title,
         user=game_user,
         users=User.query.all(),
         players=Player.query.all(),
         user_id=session["user_id"],
 
+        terminal=terminal,
+        prompt=terminal.prmpt,
+        text1=answer,
+        text=terminal.text,
         time_to_turn=time_to_turn,
     )

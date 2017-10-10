@@ -71,7 +71,7 @@ def sig_init():
     signal(SIGCONT, oops)
 
 
-def do_signal(sig_id, user):
+def do_signal(sig_id, terminal):
     global alarm
     logger().debug("SIGNAL%s occured", sig_id)
     active = alarm.active
@@ -79,6 +79,6 @@ def do_signal(sig_id, user):
     if s is None:
         return
     alarm.sig_aloff()
-    res = s(user, active=active)
+    res = s(terminal, active=active)
     alarm.sig_alon()
     return res
