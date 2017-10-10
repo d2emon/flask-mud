@@ -2,7 +2,7 @@ from flask_script import Manager
 
 
 from .models import *
-# from .views import rpg as rpg_blueprint
+from .views import mudexe as mudexe_blueprint
 from .commands import manager as mudexe_manager
 from global_vars import set_logger
 
@@ -17,14 +17,8 @@ class MudExe(object):
 
     def init_app(self, app, **kwargs):
         manager = kwargs.get('manager')
-        # app.static_folder = app.config.get('STATIC_FOLDER', 'static')
-        # app.template_folder = app.config.get('TEMPLATE_FOLDER', 'templates')
 
-        # self.toolbar = DebugToolbarExtension(app)
-
-        # app.register_blueprint(pathfinder_blueprint, url_prefix='/pathfinder')
-        # app.register_blueprint(gurps_blueprint, url_prefix='/gurps')
-        # app.register_blueprint(tnt_blueprint, url_prefix='/tnt')
+        app.register_blueprint(mudexe_blueprint, url_prefix='/mud/exe')
 
         set_logger(app.logger)
 
