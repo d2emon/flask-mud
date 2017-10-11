@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from global_vars import logger
 
 
-from .objsys import Item
+from ..objsys import Item
 
 
 SEX_MALE = 0

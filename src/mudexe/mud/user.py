@@ -1,5 +1,6 @@
 from global_vars import logger
 from datetime import datetime
+import random
 
 
 from auth.models import User as UserModel
@@ -17,12 +18,6 @@ from .world import World
 # ???
 def gamrcv(msg):
     logger().debug("<<< gamrcv(%s)", msg)
-
-
-# ???
-def randperc():
-    logger().debug("<<< randperc()")
-    return 25
 
 
 # ???
@@ -245,10 +240,7 @@ class User():
         xx = "<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (self.model.id, self.name)
         self.sendsys(self, -10113, text=xx)
         self.rte()
-        if randperc() > 50:
-            room = rooms[0]
-        else:
-            room = rooms[1]
+        room = random.choice(rooms)
         self.location = room
         self.trapch(room)
         self.sendsys(self, -10000, text=xy)

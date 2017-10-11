@@ -106,8 +106,8 @@ class World():
         player.puton(user)
         return player
 
-    def dumpstuff(self, n, loc):
+    def dumpstuff(self, user, location):
         for b in self.objects:
-            if b.iscarrby(n):
-                b.loc = loc
+            if b.iscarrby(user):
+                b.location = location
                 b.carrf = 0

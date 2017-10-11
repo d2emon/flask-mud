@@ -3,6 +3,16 @@ from ..objsys import Item
 from ..models import Player, SEX_FEMALE
 
 
+DIRECTIONS = [
+    "North",
+    "East",
+    "South",
+    "West",
+    "Up",
+    "Down",
+]
+
+
 class Zone():
     """
     Zone based name generator
@@ -12,8 +22,44 @@ class Zone():
         self.min_loc = min_loc
         self.max_loc = max_loc
 
-    def roomname(self, room_id):
+    def room_id(self, room):
+        return room.room_id - self.min_loc
+
+    def roomname(self, room_id=None, room=None):
+        if room_id is None:
+            if room is None:
+                return ""
+            else:
+                room_id = room.room_id
         return "%s%d" % (self.name, room_id)
+
+
+ZONES = [
+    Zone("LIMBO", 0, 1),
+    Zone("WSTORE", 1, 2),
+    Zone("HOME", 2, 4),
+    Zone("START", 4, 5),
+    Zone("PIT", 5, 6),
+    Zone("WIZROOM", 6, 19),
+    Zone("DEAD", 19, 99),
+    Zone("BLIZZARD", 99, 299),
+    Zone("CAVE", 299, 399),
+    Zone("LABRNTH", 399, 499),
+    Zone("FOREST", 499, 599),
+    Zone("VALLEY", 599, 699),
+    Zone("MOOR", 699, 799),
+    Zone("ISLAND", 799, 899),
+    Zone("SEA", 899, 999),
+    Zone("RIVER", 999, 1049),
+    Zone("CASTLE", 1049, 1069),
+    Zone("TOWER", 1069, 1099),
+    Zone("HUT", 1099, 1101),
+    Zone("TREEHOUSE", 1101, 1105),
+    Zone("QUARRY", 1105, 2199),
+    Zone("LEDGE", 2199, 2299),
+    Zone("INTREE", 2299, 2499),
+    Zone("WASTE", 2499, 99999),
+]
 
 
 class Room():
@@ -22,33 +68,7 @@ class Room():
         self.deathroom = False
         self.nobr = False
         self.description = ""
-        self.ex_dat = [0] * 7
-        self.zoname = [
-            Zone("LIMBO", 0, 1),
-            Zone("WSTORE", 1, 2),
-            Zone("HOME", 2, 4),
-            Zone("START", 4, 5),
-            Zone("PIT", 5, 6),
-            Zone("WIZROOM", 6, 19),
-            Zone("DEAD", 19, 99),
-            Zone("BLIZZARD", 99, 299),
-            Zone("CAVE", 299, 399),
-            Zone("LABRNTH", 399, 499),
-            Zone("FOREST", 499, 599),
-            Zone("VALLEY", 599, 699),
-            Zone("MOOR", 699, 799),
-            Zone("ISLAND", 799, 899),
-            Zone("SEA", 899, 999),
-            Zone("RIVER", 999, 1049),
-            Zone("CASTLE", 1049, 1069),
-            Zone("TOWER", 1069, 1099),
-            Zone("HUT", 1099, 1101),
-            Zone("TREEHOUSE", 1101, 1105),
-            Zone("QUARRY", 1105, 2199),
-            Zone("LEDGE", 2199, 2299),
-            Zone("INTREE", 2299, 2499),
-            Zone("WASTE", 2499, 99999),
-        ]
+        self.ex_dat = [0] * len(DIRECTIONS)
 
     # ???
     def closeroom(self):
@@ -73,8 +93,8 @@ class Room():
 
     @property
     def name(self):
-        zone, room_id = self.findzone()
-        return zone.roomname(room_id)
+        zone = self.findzone()
+        return zone.roomname(room=self)
 
     def openroom(self, mode="r"):
         # blob = "%s%d" % (ROOMS, -n)
@@ -105,13 +125,13 @@ class Room():
         if room_id is None:
             room_id = -self.room_id
 
-        for z in self.zoname:
+        for z in ZONES:
             if room_id in range(z.min_loc, z.max_loc):
-                return z, room_id - z.min_loc
-        return Zone("TCHAN"), 0
+                return z
+        return Zone("TCHAN")
 
     def lodex(self):
-        for a in range(7):
+        for a in range(len(DIRECTIONS)):
             self.ex_dat[a] = 0
 
     def showname(self, user):
@@ -119,8 +139,8 @@ class Room():
         res = self.name
         if user.person.level > 9999:
             res += "[ %s ]" % (self)
-        zone, room_id = self.findzone()
-        wd_there = "%s %d" % (zone, room_id)
+        zone = self.findzone()
+        wd_there = "%s %d" % (zone, zone.room_id(self))
         res += "\n"
         return res
 

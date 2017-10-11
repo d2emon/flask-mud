@@ -12,7 +12,7 @@
  flags (0=Normal 1+flannel)
 
 """
-from global_vars import logger
+# from global_vars import logger
 
 
 class Item():
@@ -30,17 +30,11 @@ class Item():
 
         # Objinfo
         self.loc = None  # 0
+        self.state = 0  # 1
         self.carrf = 0  # 3
 
-    # ???
-    def state(self):
-        logger().debug("<<< state(%s)", self)
-        return 0
-
-    # ???
     def iswornby(self, user):
-        logger().debug("<<< iswornby(%s, %s)", self, user)
-        return False
+        return self.iscarrby(user) and self.carrf == 2
 
     def ishere(self, location, include_destroyed=False):
         if self.is_dest and not include_destroyed:
@@ -52,9 +46,9 @@ class Item():
         return True
 
     def oplong(self, debug_mode=False):
-        if len(self.desc) <= self.state():
+        if len(self.desc) <= self.state:
             return "ERROR"
-        desc = self.desc[self.state()]
+        desc = self.desc[self.state]
         if debug_mode:
             desc = "{%s} %s" % (self.item_id, desc)
         return desc
@@ -63,10 +57,10 @@ class Item():
         if not self.ishere(location, include_destroyed):
             return False
 
-        if self.state() > 3:
+        if self.state > 3:
             return False
 
-        if len(self.desc) <= self.state():
+        if len(self.desc) <= self.state:
             return False
 
         return self
