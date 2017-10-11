@@ -103,7 +103,7 @@ class World():
         if len(Player.query.all()) > self.maxu:
             raise MudFull()
         player = Player(user=user.model)
-        player.puton()
+        player.puton(user)
         return player
 
     def dumpstuff(self, n, loc):

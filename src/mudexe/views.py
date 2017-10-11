@@ -60,6 +60,18 @@ def play_game():
     if user is None:
         return redirect(url_for("mudexe.start_game", username="User"))
 
+
+    sig_init()
+    game_user = GameUser(user.username)
+    if not game_user.load():
+        session["user_id"] = 0
+        return redirect(url_for("mudexe.start_game", username="User"))
+
+
+    terminal = PageTerminal("MUD_PROGRAM_NAME", user.username)
+    terminal.set_user(game_user)
+
+
     # Get last active
     last_active = session.get("last_active")
     if not last_active:
@@ -72,15 +84,10 @@ def play_game():
     else:
         time_to_turn = False
 
-    terminal = PageTerminal("MUD_PROGRAM_NAME", user.username)
-
-    sig_init()
-    game_user = GameUser(user.username)
-    terminal.set_user(game_user)
     if time_to_turn:
         do_signal(SIGALRM, terminal)
 
-    game_user.look()
+    room_text = game_user.look()
 
     terminal.on_text("test text")
     answer = terminal.text
@@ -92,7 +99,12 @@ def play_game():
     return render_template(
         'mudexe/view.html',
         title=terminal.title,
+        debug=game_user.debug_mode,
         user=game_user,
+        room=game_user.room,
+
+        room_text=room_text,
+
         users=User.query.all(),
         players=Player.query.all(),
         user_id=session["user_id"],

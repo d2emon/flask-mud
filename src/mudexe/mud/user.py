@@ -64,8 +64,6 @@ class User():
     # ???
     ail_blind = False
     # ???
-    curmode = False
-    # ???
     in_fight = 0
     # ???
     fighting = None
@@ -73,6 +71,8 @@ class User():
     wpnheld = -1
     # ???
     ail_dumb = False
+    # ???
+    has_farted = False
 
     def __init__(self, name):
         self.name = name  # globme
@@ -88,7 +88,7 @@ class User():
         # self.mynum = 0
         self.iamon = False
         self.lasup = 0
-        self.curmode = 0
+        self.curmode = 1  # 0
         self.convflg = 0
         self.debug_mode = True  # False
         self.tdes = 0
@@ -127,6 +127,16 @@ class User():
             return True
 
         return self.interrupt
+
+    def load(self):
+        if self.player is None:
+            return False
+        if self.person is None:
+            return False
+        self.location = self.player.location
+        self.message_id = self.player.message_id
+        self.room = Room(self.location)
+        return True
 
     def prepare_game(self):
         self.message_id = None
@@ -274,7 +284,7 @@ class User():
         self.world.dumpstuff(self.mynum, self.location)
 
     def initme(self):
-        person = Person.query.by_user(self.model).first()
+        person = Person.query.by_user(self.model)
         if person is None:
             self.buff.bprintf("Creating character....")
             person = Person(user=self.model)
@@ -401,55 +411,54 @@ class User():
     def hiccup(self):
         return gamecom("hiccup")
 
-    def look(self, room=None):
+    def look(self, room_id=None):
         """
         Lords ????
         """
-        if room is None:
-            room = self.location
+        if room_id is None:
+            room_id = self.location
 
         self.world.closeworld()
 
-        r = Room(room)
+        room = Room(room_id)
 
-        blind_msg = ""
-        if self.ail_blind:
-            blind_msg = "You are blind... you can't see a thing!\n"
-
-        roomname = ""
+        roomtext = {
+            "name": "",
+            "description": "",
+            "objects": "",
+            "people": "",
+        }
         if self.person.is_wizzard:
-            roomname = r.showname(self)
+            roomtext["name"] = room.showname(self)
+        roomtext["description"] = room.look(self)
 
-        description = r.look(self)
-
-        if r.nobr:
+        if room.nobr:
             self.brmode = False
 
-        if r.deathroom:
+        if room.deathroom:
             self.ail_blind = False
-
-        if self.ail_blind:
-            description = ""
 
         if self.brmode:
-            description = ""
+            roomtext["description"] = ""
 
-        text = "%s%s%s\n" % (
-            blind_msg,
-            roomname,
-            r.look(self),
-        )
-        self.buff.bprintf(text)
-        if r.deathroom:
-            self.ail_blind = False
-            self.deathroom()
+        if self.ail_blind:
+            roomtext["description"] = "You are blind... you can't see a thing!"
 
-        obs = ""
-        people = ""
-        if r.cansee(self):
-            obs = r.lisobs(self)
+        if room.cansee(self):
+            roomtext["objects"] = room.lisobs(self)
             if self.curmode:
-                pepople = self.lispeople(self)
-        self.buff.bprintf("%s%s" % (obs, people))
+                roomtext["people"] = room.lispeople(self)
 
+        if room.deathroom:
+            self.ail_blind = False
+            roomtext["objects"] = ""
+            roomtext["people"] = ""
+            self.deathroom()
         onlook()
+        return roomtext
+        # self.buff.bprintf("\n".join([
+        #     roomtext["title"],
+        #     roomtext["description"],
+        #     roomtext["objects"],
+        #     roomtext["people"],
+        # ]))

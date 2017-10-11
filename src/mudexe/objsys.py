@@ -18,6 +18,7 @@ from global_vars import logger
 class Item():
     def __init__(self):
         # Objects
+        self.item_id = 0
         self.name = ""
         self.desc = []  # longt
         self.flannel = 0
@@ -34,40 +35,44 @@ class Item():
     # ???
     def state(self):
         logger().debug("<<< state(%s)", self)
-        return True
+        return 0
 
-    def ishere(self, user):
-        if user.person.level < 10 and self.is_dest:
+    # ???
+    def iswornby(self, user):
+        logger().debug("<<< iswornby(%s, %s)", self, user)
+        return False
+
+    def ishere(self, location, include_destroyed=False):
+        if self.is_dest and not include_destroyed:
             return False
         if self.carrf == 1:
             return False
-        if self.loc != user.curch:
-            return 0
+        if self.loc != location:
+            return False
         return True
 
-    def oplong(self, user):
+    def oplong(self, debug_mode=False):
+        if len(self.desc) <= self.state():
+            return "ERROR"
         desc = self.desc[self.state()]
-        if user.debug_mode:
-            return "{%d} %s\n" % (self, desc)
-        if desc:
-            return "%s\n" % (desc)
-        return ""
+        if debug_mode:
+            desc = "{%s} %s" % (self.item_id, desc)
+        return desc
 
-    def lojal2(self, n, user):
-        res = ""
-        if self.ishere(user) and self.flannel == n:
-            if self.state() > 3:
-                continue
-            if not self.olongt(self, self.state()):
-                # OLONGT NOTE TO BE ADDED
-                if self.isdest():
-                    res += "--"
-                res += self.oplong(user)
-                user.wd_it = self.name
-        return res
+    def lojal2(self, location, include_destroyed=False, debug_mode=False):
+        if not self.ishere(location, include_destroyed):
+            return False
 
-    def iscarrby(self, user):
-        if user.person.level < 10 and self.isdest():
+        if self.state() > 3:
+            return False
+
+        if len(self.desc) <= self.state():
+            return False
+
+        return self
+
+    def iscarrby(self, user, include_destroyed=False):
+        if self.is_dest and not include_destroyed:
             return False
         if self.carrf != 1 and self.carrf != 2:
             return False
@@ -83,6 +88,16 @@ class Item():
         if user.person.level < 10 and self.is_dest:
             return False
         return True
+
+    def short_name(self, owner=None, debug_mode=False):
+        res = self.name
+        if debug_mode:
+            res += "{%-3s}" % (str(self.item_id))
+        if self.iswornby(owner):
+            res += " <worn>"
+        if self.is_dest:
+            res = "(%s)" % (res)
+        return res
 
 
 """
