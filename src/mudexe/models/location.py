@@ -1,9 +1,9 @@
 from app import db
-from sqlalchemy import desc
 from global_vars import logger
 
 
-from ..objsys import Item
+from .item import Item
+from .player import Player
 
 
 class Zone():
@@ -53,6 +53,9 @@ ZONES = [
 ]
 
 
+STARTING_LOCATIONS = [5, 183]
+
+
 class Location(db.Model):
     """
     Create a Location table
@@ -70,7 +73,6 @@ class Location(db.Model):
     description = db.Column(db.UnicodeText(), info={'label': "Description"})
 
     __zone = None
-    objects = [Item()] * 5
 
     def openroom(self, mode="r"):
         # blob = "%s%d" % (ROOMS, -n)
@@ -114,9 +116,11 @@ class Location(db.Model):
 
     @property
     def players(self):
-        from . import Player
-
         return Player.query.all()
+
+    @property
+    def objects(self):
+        return Item.in_room(room_id=self.id)
 
     def __repr__(self):
         return self.name
@@ -163,14 +167,6 @@ class Location(db.Model):
         self.description = "\nYou are on channel %s\n" % (self.id)
         return
 
-    def showname(self, user):
-        res = str(self.name)
-        if user.person.level > 9999:
-            res += "[ %s ]" % (self)
-        user.wd_there = self.name
-        res += "\n"
-        return res
-
     def list_objects(self, user):
         """
         lisobs
@@ -191,18 +187,15 @@ class Location(db.Model):
 
         res = []
         for a in self.objects:
-            a.desc.append("Item description")
-            a.loc = self.id
-            a.flannel = flannel
             if a.flannel != flannel:
                 continue
-            desc = a.lojal2(
+            o = a.lojal2(
                 self.id,
                 include_destroyed=include_destroyed,
                 debug_mode=debug,
             )
-            if desc:
-                res.append(desc)
+            if o:
+                res.append(o)
                 if user is not None:
                     user.wd_it = a.name
         return res
@@ -212,29 +205,20 @@ class Location(db.Model):
         lispeople
         """
         res = []
-        from . import SEX_FEMALE
-
         for a in self.players:
             # res.append(a.showto(user))
             u = a.showto(user)
             if u:
                 res.append(u)
-                if u.sex == SEX_FEMALE:
-                    user.wd_her = u.name
-                else:
-                    user.wd_him = u.name
+                user.wd_people(u)
         return res
 
-    def cansee(self, user):
-        return not self.isdark() and not user.ail_blind
-
-    def look(self, user):
+    @property
+    def look(self):
         if self.isdark():
             self.closeroom()
-            user.world.openworld()
             return "It is dark\n"
         self.closeroom()
-        user.world.openworld()
         return self.description
 
     def lobjsat(self, user):
@@ -248,8 +232,7 @@ class Location(db.Model):
         d = 0
         e = False
         f = 0
-        objects = []
-        for c in objects:
+        for c in self.objects:
             if mode == 1 and not c.iscarrby(self):
                 continue
             if mode == 3 and not c.iscontin(self):

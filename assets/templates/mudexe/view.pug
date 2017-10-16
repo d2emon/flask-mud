@@ -6,45 +6,42 @@ block content
     .row
       .col-md-8
         p {{time_to_turn}}
-        .row
-          .col-md-6
-            .room
-              | {% if room_text.name %}
-              h2 {{ room_text.name }} 
-              | {% endif %}
+        .room
+          | {% if user.person.is_wizzard %}
+          h2 {{ room_text.room.name }}{% if user.person.is_god %}[{{ room_text.room.id }}]{% endif %} 
+          | {% endif %}
 
-              | {% if user.ail_blind %}
-              p You are blind... you can't see a thing!
-              | {% endif %}
+          | {% if user.ail_blind %}
+          p You are blind... you can't see a thing!
+          | {% endif %}
 
-              pre
-                | {% if room_text.description %}
-                div {{room_text.description}}
-                | {% endif %}
+          pre
+            | {% if room_text.description %}
+            div {{room_text.description}}
+            | {% endif %}
 
-                | {% if room_text.objects %}
-                ul
-                  | {% for o in room_text.objects %}
-                  li {% if o.is_dest %}--{% endif %}{{o.oplong(debug) }}
-                  | {% endfor %}
-                | {% endif %}
+            | {% if room_text.objects %}
+            ul
+              | {% for o in room_text.objects %}
+              li {% if o.is_dest %}--{% endif %}{{o.oplong(debug) }}
+              | {% endfor %}
+            | {% endif %}
 
-                | {% if room_text.people %}
-                ul
-                  | {% for p in room_text.people %}
-                  li {{p.show_name(debug) }} is here carrying
-                     ul
-                       | {% for i in user.player.lobjsat(user) %}
-                       li {{i.short_name(player, debug)}}
-                       | {% endfor %}
-                  | {% endfor %}
-                | {% endif %}
-          .col-md-6
-            .game-log
-              pre
-                | {{text1}}
-            pre
-              | {{text}}
+            | {% if room_text.people %}
+            ul
+              | {% for p in room_text.people %}
+              li {{p.show_name(debug) }} is here carrying
+                 ul
+                   | {% for i in user.player.lobjsat(user) %}
+                   li {{i.short_name(player, debug)}}
+                   | {% endfor %}
+              | {% endfor %}
+            | {% endif %}
+        .game-log
+          pre
+            | {{text1}}
+        pre
+          | {{text}}
         div
           form
             | {{prompt}}

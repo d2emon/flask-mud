@@ -33,6 +33,19 @@ class Item():
         self.state = 0  # 1
         self.carrf = 0  # 3
 
+    @classmethod
+    def all(cls):
+        return [cls()] * 10
+
+    @classmethod
+    def in_room(cls, room_id, flannel=None):
+        objects = cls.all()
+        for id, o in enumerate(objects):
+            o.desc.append("Item %d description" % (id))
+            o.loc = room_id
+            if flannel is not None:
+                o.flannel = flannel
+
     def iswornby(self, user):
         return self.iscarrby(user) and self.carrf == 2
 

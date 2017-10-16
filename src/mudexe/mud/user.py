@@ -7,8 +7,9 @@ from auth.models import User as UserModel
 
 
 from ..gamego.signals import alarm
-from ..models import Message, Player, Person
-from ..models.location import Location
+from ..models import Message, Person
+from ..models.player import Player, SEX_FEMALE
+from ..models.location import STARTING_LOCATIONS, Location
 from .exceptions import Crapup
 from .textbuff import TextBuffer
 from .tty import special
@@ -233,7 +234,7 @@ class User():
 
     def start_game(self):
         self.curmode = 1
-        rooms = [-5, -183]
+        rooms = STARTING_LOCATIONS
         self.initme()
         self.world.openworld()
         self.player.strength = self.person.strength
@@ -350,6 +351,11 @@ class User():
             prmpt = "(%s)" % prmpt
         return "\r" + prmpt
 
+    def cansee(self, room):
+        if self.ail_blind:
+            return False
+        return not room.isdark()
+
     def end_fight(self):
         self.in_fight = 0
         self.fighting = None
@@ -425,43 +431,53 @@ class User():
             room = Location(id=room_id)
             room.no_file()
 
-        roomtext = {
-            "name": "",
-            "description": "",
-            "objects": "",
-            "people": "",
-        }
         if self.person.is_wizzard:
-            roomtext["name"] = room.showname(self)
-        roomtext["description"] = room.look(self)
+            self.wd_there = room.name
+        room_description = room.look
+        room_objects = []
+        room_people = []
+        self.world.openworld()
 
         if room.nobr:
             self.brmode = False
 
         if room.deathroom:
             self.ail_blind = False
+            room_objects = ""
+            room_people = ""
+            self.deathroom()
 
         if self.brmode:
-            roomtext["description"] = ""
+            room_description = ""
 
-        if self.ail_blind:
-            roomtext["description"] = "You are blind... you can't see a thing!"
-
-        if room.cansee(self):
-            roomtext["objects"] = room.list_objects(self)
-            if self.curmode:
-                roomtext["people"] = room.list_people(self)
-
-        if room.deathroom:
-            self.ail_blind = False
-            roomtext["objects"] = ""
-            roomtext["people"] = ""
-            self.deathroom()
         onlook()
-        return roomtext
+        return {
+            "room": room,
+            "description": room_description,
+            "objects": self.look_room_objects(room),
+            "people": self.look_room_people(room),
+        }
         # self.buff.bprintf("\n".join([
         #     roomtext["title"],
         #     roomtext["description"],
         #     roomtext["objects"],
         #     roomtext["people"],
         # ]))
+
+    def look_room_objects(self, room):
+        if not self.cansee(room):
+            return []
+        return room.list_objects(self)
+
+    def look_room_people(self, room):
+        if not self.cansee(room):
+            return []
+        if not self.curmode:
+            return []
+        return room.list_people(self)
+
+    def wd_people(self, p):
+        if p.sex == SEX_FEMALE:
+            self.wd_her = p.name
+        else:
+            self.wd_him = p.name
