@@ -76,6 +76,8 @@ class User():
     # ???
     wd_her = ""
     # ???
+    wd_them = ""
+    # ???
     wd_there = ""
 
     def __init__(self, name):
@@ -477,7 +479,14 @@ class User():
         return room.list_people(self)
 
     def wd_people(self, p):
+        """
+        Assign Him her etc according to who it is
+        """
+        # if p.id > 15 and p != Player.query.fpbns("riatha") and p != Player.query.fpbns("shazareth"):
+        #     self.wd_it = p.name
+        #     return
         if p.sex == SEX_FEMALE:
             self.wd_her = p.name
         else:
             self.wd_him = p.name
+        self.wd_them = self.name

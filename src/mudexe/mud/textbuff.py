@@ -177,43 +177,28 @@ class TextBuffer():
 
 
 def pfile(stri, ct, f):
-    """
- char *str;
- FILE *file;
-    {
-    extern long debug_mode;
-    char x[128];
-    ct=tocontinue(str,ct,x,128);
-    if(debug_mode) fprintf(file,"[FILE %s ]\n",str);
-    f_listfl(x,file);
-    return(ct);
-    }
-    """
+    ct, x = tocontinue(stri, ct, 128)
+    # extern long debug_mode;
+    # if debug_mode:
+    #     f.printf("[FILE %s ]\n", stri)
+    # f.f_listfl(x)
+    return ct
 
 
 def pndeaf(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 256)
     """
- char *str;
- FILE *file;
-    {
-    char x[256];
     extern long ail_deaf;
-    ct=tocontinue(str,ct,x,256);
     if(!ail_deaf)fprintf(file,"%s",x);
-    return(ct);
-    }
     """
+    return ct
 
 
 def pcansee(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 23)
     """
- char *str;
- FILE *file;
-    {
-    char x[25];
     char z[257];
     long a;
-    ct=tocontinue(str,ct,x,23);
     a=fpbns(x);
     if(!seeplayer(a))
        {
@@ -222,109 +207,73 @@ def pcansee(stri, ct, f):
        }
     ct=tocontinue(str,ct,z,256);
     fprintf(file,"%s",z);
-    return(ct);
-    }
     """
+    return ct
 
 
 def prname(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 24)
     """
- char *str;
- FILE *file;
-    {
-    char x[24];
-    ct=tocontinue(str,ct,x,24);
     if(!seeplayer(fpbns(x)))
     fprintf(file,"Someone");
     else
       fprintf(file,"%s",x);
-    return(ct);
-    }
     """
+    return ct
 
 
-"""
-int pndark(str,ct,file)
- char *str;
- FILE *file;
-    {
-    char x[257];
+def pndark(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 256)
+    """
     extern long ail_blind;
-    ct=tocontinue(str,ct,x,256);
     if((!isdark())&&(ail_blind==0))
     fprintf(file,"%s",x);
-    return(ct);
-    }
+    """
+    return ct
 
-int tocontinue(str,ct,x,mx)
- char *str;
- long ct;
- char *x;
- long mx;
-    {
-    long s;
-    s=0;
-    while(str[ct]!='\001')
-       {
-       x[s++]=str[ct++];
-       }
-    x[s]=0;
-if(s>=mx)
-{
-syslog("IO_TOcontinue overrun");
-strcpy(str,"");
-crapup("Buffer OverRun in IO_TOcontinue");
-}
-    return(ct+1);
-    }
 
-int seeplayer(x)
-    {
-    extern long mynum;
-    extern long ail_blind;
-    extern long curch;
-    if(x==-1) return(1);
-    if(mynum==x) {return(1);} /* me */
-    if(plev(mynum)<pvis(x)) return(0);
-    if(ail_blind) return(0); /* Cant see */
-    if((curch==ploc(x))&&(isdark(curch)))return(0);
-    setname(x);
-    return(1);
-    }
-int ppndeaf(str,ct,file)
- char *str;
- FILE *file;
-    {
-    char x[24];
+def tocontinue(stri, ct, mx):
+    x = ""
+    while stri[ct] != '\001':
+        x += stri[ct]
+        ct += 1
+    if len(x) >= mx:
+        # syslog("IO_TOcontinue overrun")
+        # stri = ""
+        # crapup("Buffer OverRun in IO_TOcontinue")
+        pass
+    return ct+1, "x"
+
+
+def ppndeaf(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 24)
+    """
     extern long ail_deaf;
     long a;
-    ct=tocontinue(str,ct,x,24);
     if(ail_deaf) return(ct);
     a=fpbns(x);
     if(seeplayer(a)) fprintf(file,"%s",x);
     else
       fprintf(file,"Someone");
-    return(ct);
-    }
+    """
+    return ct
 
-int  ppnblind(str,ct,file)
-char *str;
-FILE *file;
-    {
+
+def ppnblind(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 24)
+    """
     extern long ail_blind;
-    char x[24];
     long a;
-    ct=tocontinue(str,ct,x,24);
     if(ail_blind) return(ct);
     a=fpbns(x);
     if(seeplayer(a)) fprintf(file,"%s",x);
     else
        fprintf(file,"Someone");
-    return(ct);
-    }
+    """
+    return ct
 
 
-
+"""
 void logcom()
     {
     extern FILE * log_fl;
@@ -348,19 +297,17 @@ void logcom()
        }
     bprintf("The log will be written to the file 'mud_log'\n");
     }
+"""
 
-int pnotkb(str,ct,file)
- char *str;
- FILE *file;
-    {
+
+def pnotkb(stri, ct, f):
+    ct, x = tocontinue(stri, ct, 127)
+    """
     extern long iskb;
-    char x[128];
-    ct=tocontinue(str,ct,x,127);
     if(iskb) return(ct);
     fprintf(file,"%s",x);
-    return(ct);
-    }
-"""
+    """
+    return ct
 
 
 def snoopcom():
@@ -403,20 +350,4 @@ def snoopcom():
     fprintf(fx," ");
     fcloselock(fx);
     }
-    """
-
-
-def setname(x):
-    """
-    /* Assign Him her etc according to who it is */
-    long x;
-    {
-    if((x>15)&&(x!=fpbns("riatha"))&&(x!=fpbns("shazareth")))
-    {
-        strcpy(wd_it,pname(x));
-        return;
-    }
-    if(psex(x)) strcpy(wd_her,pname(x));
-    else strcpy(wd_him,pname(x));
-    strcpy(wd_them,pname(x));
     """

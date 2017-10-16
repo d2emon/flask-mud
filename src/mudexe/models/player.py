@@ -87,8 +87,15 @@ class PlayerQuery(PagedQuery):
             return self
         q = q.filter(Player.id != user.player.id)
         # self.filter_by(location=user.location)
-        # if not user.seeplayer(self):
+
+        # Seeplayer
+        q = q.filter(Player.visible <= user.player.level)
+        # if user.ail_blind:
+        #     return False  # Cant see
+        # if self.here.isdark():
         #     return False
+        # if user is not None:
+        #     user.wd_people(player)
         return q
 
 
@@ -115,6 +122,11 @@ class Player(db.Model):
 
     has_farted = False
 
+    @property
+    def here(self):
+        from .location import Location
+        return Location.query.get(self.location)
+
     def puton(self, game_user=None):
         if self.user:
             self.name = self.user.username
@@ -136,17 +148,6 @@ class Player(db.Model):
     def save(self):
         db.session.add(self)
         db.session.commit()
-
-    def showto(self, user):
-        if self == user.player:
-            return False
-        if not self.name:
-            return False
-        # if self.location != user.location:
-        #     return False
-        # if not user.seeplayer(self):
-        #     return False
-        return self
 
     def show_name(self, debug_mode=False):
         name = self.name
@@ -182,3 +183,19 @@ class Player(db.Model):
         Carried Loc !
         """
         return Item.at_player(self.id)
+
+    def seeplayer(self, player, user=None):
+        if player is None:
+            return True
+        if self == player:
+            return True  # me
+        if self.level < player.visible:
+            return False
+        if user is not None:
+            if user.ail_blind:
+                return False  # Cant see
+        if self.location == player.location and self.here.isdark():
+            return False
+        if user is not None:
+            user.wd_people(player)
+        return True
