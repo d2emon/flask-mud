@@ -8,6 +8,9 @@ from global_vars import logger
 from ..objsys import Item
 
 
+from .location import *
+
+
 SEX_MALE = 0
 SEX_FEMALE = 1
 
@@ -86,7 +89,7 @@ class Person(db.Model):
     user = db.relationship('User', backref='persons')
 
     def __repr__(self):
-        return self.name
+        return self.user.name
 
     def save(self):
         db.session.add(self)

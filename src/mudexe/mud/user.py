@@ -8,9 +8,9 @@ from auth.models import User as UserModel
 
 from ..gamego.signals import alarm
 from ..models import Message, Player, Person
+from ..models.location import Location
 from .exceptions import Crapup
 from .textbuff import TextBuffer
-from .room import Room
 from .tty import special
 from .world import World
 
@@ -68,6 +68,14 @@ class User():
     ail_dumb = False
     # ???
     has_farted = False
+    # ???
+    wd_it = ""
+    # ???
+    wd_him = ""
+    # ???
+    wd_her = ""
+    # ???
+    wd_there = ""
 
     def __init__(self, name):
         self.name = name  # globme
@@ -130,7 +138,7 @@ class User():
             return False
         self.location = self.player.location
         self.message_id = self.player.message_id
-        self.room = Room(self.location)
+        self.room = Location.query.get(self.location)
         return True
 
     def prepare_game(self):
@@ -412,7 +420,10 @@ class User():
 
         self.world.closeworld()
 
-        room = Room(room_id)
+        room = Location.query.get(-room_id)
+        if room is None:
+            room = Location(id=room_id)
+            room.no_file()
 
         roomtext = {
             "name": "",
@@ -437,9 +448,9 @@ class User():
             roomtext["description"] = "You are blind... you can't see a thing!"
 
         if room.cansee(self):
-            roomtext["objects"] = room.lisobs(self)
+            roomtext["objects"] = room.list_objects(self)
             if self.curmode:
-                roomtext["people"] = room.lispeople(self)
+                roomtext["people"] = room.list_people(self)
 
         if room.deathroom:
             self.ail_blind = False

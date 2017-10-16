@@ -1,7 +1,9 @@
 from flask_script import Manager
 # from flask_script import Manager, prompt, prompt_pass
 # from . import app, db
+from app import app
 # from .models import User, Role
+import os
 
 
 from global_vars import logger
@@ -13,6 +15,9 @@ from .ogenerate import ogenerate
 from .makeuaf import makeuaf
 from .mud_exe import compile as compile_mud_exe
 from .mud1 import compile as compile_mud_1
+
+
+from mudexe.models.location import Location
 
 
 manager = Manager(usage="Application installer")
@@ -147,3 +152,28 @@ def install():
     """
     install1()
     install2()
+
+
+@manager.command
+def loadrooms():
+    """
+    Load Rooms
+    """
+    for i in range(1, 1125):
+        print("Loading room %d" % (i))
+        filename = os.path.join(app.config.get('ROOMS_FOLDER', 'rooms'), str(i))
+        print(filename)
+        l = Location.query.get(i)
+        if l is None:
+            l = Location()
+            l.id = i
+        l.name = "Channel %d" % (i)
+        try:
+            l.load_from_file(filename)
+        except FileNotFoundError:
+            pass
+        print(l.id, l.name)
+        print(l.north, l.east, l.south, l.west, l.up, l.down)
+        print(l.nobr, l.deathroom)
+        print(l.description)
+        l.save()

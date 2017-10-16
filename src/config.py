@@ -32,6 +32,8 @@ class Config(object):
     STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
     TEMPLATE_FOLDER = os.path.join(BASE_DIR, 'templates')
 
+    ROOMS_FOLDER = os.path.join(BASE_DIR, 'db', 'rooms')
+
 
 class ProductionConfig(Config):
     pass
