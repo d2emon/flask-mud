@@ -120,7 +120,7 @@ class Location(db.Model):
 
     @property
     def objects(self):
-        return Item.in_room(room_id=self.id)
+        return Item.at_location(self.id)
 
     def __repr__(self):
         return self.name
@@ -172,45 +172,45 @@ class Location(db.Model):
         lisobs
         """
         res = []
-        res += self.objects_at(1, include_destroyed=user.person.is_wizzard, debug=user.debug_mode, user=user)
+        res += self.objects_at(
+            flannel=1,
+            include_destroyed=user.person.is_wizzard,
+            debug=user.debug_mode,
+            user=user
+        )
         res += [self.showwthr(), ]
-        res += self.objects_at(0, include_destroyed=user.person.is_wizzard, debug=user.debug_mode, user=user)
+        res += self.objects_at(
+            flannel=0,
+            include_destroyed=user.person.is_wizzard,
+            debug=user.debug_mode,
+            user=user
+        )
         return res
 
-    def objects_at(self, flannel, **kwargs):
+    def objects_at(self, **kwargs):
         """
         lojal2
         """
-        include_destroyed = kwargs.get('include_destroyed', False)
-        debug = kwargs.get('debug', False)
         user = kwargs.get('user')
 
-        res = []
-        for a in self.objects:
-            if a.flannel != flannel:
-                continue
-            o = a.lojal2(
-                self.id,
-                include_destroyed=include_destroyed,
-                debug_mode=debug,
-            )
-            if o:
-                res.append(o)
-                if user is not None:
-                    user.wd_it = a.name
+        res = Item.at_location(self.id, **kwargs)
+        if not res:
+            return res
+
+        if user is not None:
+            user.wd_it = res[-1].name
         return res
 
     def list_people(self, user=None):
         """
         lispeople
         """
-        res = []
-        for a in self.players:
-            # res.append(a.showto(user))
-            u = a.showto(user)
-            if u:
-                res.append(u)
-                user.wd_people(u)
+        res = Player.query.visible_to(user).all()
+        if not res:
+            return res
+
+        if user is not None:
+            user.wd_people(res[-1])
         return res
 
     @property

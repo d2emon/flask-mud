@@ -35,16 +35,42 @@ class Item():
 
     @classmethod
     def all(cls):
-        return [cls()] * 10
+        return [cls() for i in range(10)]
 
     @classmethod
-    def in_room(cls, room_id, flannel=None):
+    def at_location(cls, location_id, **kwargs):
+        """
+        lojal2
+        """
+        # self.state <= 3:
+        # len(o.desc) > o.state:
+        include_destroyed = kwargs.get('include_destroyed', False)
+        flannel = kwargs.get('flannel')
+        state = kwargs.get('state')
+
         objects = cls.all()
         for id, o in enumerate(objects):
-            o.desc.append("Item %d description" % (id))
-            o.loc = room_id
-            if flannel is not None:
-                o.flannel = flannel
+            o.set_here(location_id, id=id, carrf=0, **kwargs)
+        return objects
+
+    @classmethod
+    def at_player(cls, player_id, **kwargs):
+        """
+        lojal2
+        """
+        # self.state <= 3:
+        # len(o.desc) > o.state:
+        include_destroyed = kwargs.get('include_destroyed', False)
+        flannel = kwargs.get('flannel')
+        state = kwargs.get('state')
+
+        objects = cls.all()
+        for id, o in enumerate(objects):
+            o.set_here(player_id, id=id, carrf=1, **kwargs)
+            # carrf in (1, 2)
+
+            # o_txt = c.short_name(user, debug_mode=debug_mode)
+        return objects
 
     def iswornby(self, user):
         return self.iscarrby(user) and self.carrf == 2
@@ -58,6 +84,33 @@ class Item():
             return False
         return True
 
+    def set_here(self, location, **kwargs):
+        id = kwargs.get('id', 0)
+        include_destroyed = kwargs.get('include_destroyed', False)
+        state = kwargs.get('state')
+        flannel = kwargs.get('flannel')
+        carrf = kwargs.get('carrf')
+
+        if include_destroyed:
+            destroyed = (id % 3) == 1
+        else:
+            destroyed = False
+
+        self.item_id = id
+        self.name = "Item %d" % (id)
+        self.desc.append("Item %d description" % (id))
+        self.carrf = carrf  # self.carrf != 1
+        self.loc = location
+        if destroyed:
+            self.is_dest = True
+        else:
+            self.is_dest = False
+
+        if flannel is not None:
+            self.flannel = flannel
+        if state is not None:
+            self.state = state
+
     def oplong(self, debug_mode=False):
         if len(self.desc) <= self.state:
             return "ERROR"
@@ -65,18 +118,6 @@ class Item():
         if debug_mode:
             desc = "{%s} %s" % (self.item_id, desc)
         return desc
-
-    def lojal2(self, location, include_destroyed=False, debug_mode=False):
-        if not self.ishere(location, include_destroyed):
-            return False
-
-        if self.state > 3:
-            return False
-
-        if len(self.desc) <= self.state:
-            return False
-
-        return self
 
     def iscarrby(self, user, include_destroyed=False):
         if self.is_dest and not include_destroyed:

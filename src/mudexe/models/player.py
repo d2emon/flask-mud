@@ -78,6 +78,19 @@ class PlayerQuery(PagedQuery):
             return None
         return player
 
+    def visible_to(self, user):
+        """
+        showto
+        """
+        q = self.filter(Player.name != "")
+        if not user:
+            return self
+        q = q.filter(Player.id != user.player.id)
+        # self.filter_by(location=user.location)
+        # if not user.seeplayer(self):
+        #     return False
+        return q
+
 
 class Player(db.Model):
     """
@@ -168,16 +181,4 @@ class Player(db.Model):
         """
         Carried Loc !
         """
-        res = []
-        objects = [Item()] * 10
-        for c in objects:
-            c.carrf = 1
-            c.loc = user
-            c.name = "Item"
-
-            if not c.iscarrby(user, user.person.is_wizzard):
-                continue
-
-            # o_txt = c.short_name(user, debug_mode=debug_mode)
-            res.append(c)
-        return res
+        return Item.at_player(self.id)
