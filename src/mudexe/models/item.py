@@ -31,6 +31,7 @@ class Item():
         # Objinfo
         self.loc = None  # 0
         self.state = 0  # 1
+        self.bits = [False for i in range(16)]  # tstbit 2
         self.carrf = 0  # 3
 
     @classmethod
@@ -72,6 +73,27 @@ class Item():
             # o_txt = c.short_name(user, debug_mode=debug_mode)
         return objects
 
+    @classmethod
+    def light_at_location(cls, location_id, **kwargs):
+        """
+        """
+        include_destroyed = kwargs.get('include_destroyed', False)
+        flannel = kwargs.get('flannel')
+        state = kwargs.get('state')
+
+        objects = []
+        for id in range(5):
+            o = cls()
+            o.set_here(location_id, id=id, light=True, **kwargs)
+            objects.append(o)
+        for id in range(5):
+            o = cls()
+            o.set_here(location_id, id=id + 5, carrf=1, **kwargs)
+            # c.carrf == 0 or c.carrf == 3:
+            # c.loc.location != self.id:
+            objects.append(o)
+        return objects
+
     def iswornby(self, user):
         return self.iscarrby(user) and self.carrf == 2
 
@@ -90,6 +112,7 @@ class Item():
         state = kwargs.get('state')
         flannel = kwargs.get('flannel')
         carrf = kwargs.get('carrf')
+        light = kwargs.get('light', False)
 
         if include_destroyed:
             destroyed = (id % 3) == 1
@@ -101,6 +124,7 @@ class Item():
         self.desc.append("Item %d description" % (id))
         self.carrf = carrf  # self.carrf != 1
         self.loc = location
+        self.bits[13] = light
         if destroyed:
             self.is_dest = True
         else:
@@ -146,6 +170,11 @@ class Item():
         if self.is_dest:
             res = "(%s)" % (res)
         return res
+
+    def is_light(self):
+        if self.item_id != 32 and not self.bits[13]:
+            return False
+        return True
 
 
 """
@@ -470,11 +499,6 @@ oclearbit(ob,x)
 extern long objinfo[];
 bit_clear(&(objinfo[4*ob+2]),x);
 }
-otstbit(ob,x)
-{
-extern long objinfo[];
-return(bit_fetch(objinfo[4*ob+2],x));
-}
 osetbyte(o,x,y)
 {
 extern long objinfo[];
@@ -504,7 +528,7 @@ return(0);
     """
 
 
-class Weather(Item):
+class Weather():
     CLIMATES = [
         range(5),
         [n % 2 for n in range(5)],
@@ -512,14 +536,14 @@ class Weather(Item):
     ]
 
     def __init__(self, climate_id=0):
-        Item.__init__(self)
-        self.state = 1
+        self.item = Item()
+        self.item.state = 1
         self.climate_id = climate_id
         self.climate = self.CLIMATES[climate_id]
 
     @property
     def climate_state(self):
-        return self.climate[self.state]
+        return self.climate[self.item.state]
 
     def oplong(self, debug=False):
         """

@@ -1,5 +1,5 @@
 from app import db
-from global_vars import logger
+# from global_vars import logger
 
 
 from .item import Item, Weather
@@ -83,16 +83,6 @@ class Location(db.Model):
     def closeroom(self):
         # logger().debug("<<< fclose(%s)", self)
         return None
-
-    # ???
-    def getstr(self):
-        logger().debug("<<< getstr(%s)", self)
-        return None
-
-    # ???
-    def isdark(self):
-        logger().debug("<<< is_dark()")
-        return False
 
     @property
     def zone(self):
@@ -208,14 +198,6 @@ class Location(db.Model):
             user.wd_people(res[-1])
         return res
 
-    @property
-    def look(self):
-        if self.isdark():
-            self.closeroom()
-            return "It is dark\n"
-        self.closeroom()
-        return self.description
-
     def lobjsat(self, user):
         self.aobjsat(1, user)
 
@@ -281,3 +263,22 @@ class Location(db.Model):
         if self.id >= 100 and self.id <= 178:
             return 2
         return 0
+
+    @property
+    def dark(self):
+        if self.id == 1100 or self.id == 1101:
+            return False
+        if self.id >= 1113 and self.id <= 1123:
+            return True
+        if self.id < 300 or self.id > 399:
+            return False
+        return True
+
+    @property
+    def has_light(self):
+        if not self.dark:
+            return True
+
+        if Item.light_at_location(self.id) is None:
+            return True
+        return False

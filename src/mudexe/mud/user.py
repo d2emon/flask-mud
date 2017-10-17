@@ -353,10 +353,15 @@ class User():
             prmpt = "(%s)" % prmpt
         return "\r" + prmpt
 
+    def is_dark(self, room):
+        if self.person.is_wizzard:
+            return False
+        return not room.has_light
+
     def cansee(self, room):
         if self.ail_blind:
             return False
-        return not room.isdark()
+        return not self.is_dark(room)
 
     def end_fight(self):
         self.in_fight = 0
@@ -435,7 +440,12 @@ class User():
 
         if self.person.is_wizzard:
             self.wd_there = room.name
-        room_description = room.look
+
+        if self.is_dark(room):
+            room_description = "It is dark\n"
+        else:
+            room_description = room.description
+
         room_objects = []
         room_people = []
         self.world.openworld()
