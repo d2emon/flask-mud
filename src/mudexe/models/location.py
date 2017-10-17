@@ -6,6 +6,9 @@ from .item import Item, Weather
 from .player import Player
 
 
+from ..mud.exceptions import GoError
+
+
 class Zone():
     """
     Zone based name generator
@@ -289,3 +292,32 @@ class Location(db.Model):
         if Item.light_at_location(self.id) is None:
             return True
         return False
+
+    def on_go(self, user, direction):
+        if self.has_intense_heat:
+            if not user.shielded:
+                raise GoError("The intense heat drives you back")
+            else:
+                user.buff.bprintf("The shield protects you from the worst of the lava stream's heat")
+
+        if self.id <= 0:
+            raise GoError()
+
+    @property
+    def has_intense_heat(self):
+        return self.id == 139
+
+    def exits(self, exit_id):
+        if exit_id == 0:
+            return self.north
+        elif exit_id == 1:
+            return self.east
+        elif exit_id == 2:
+            return self.south
+        elif exit_id == 3:
+            return self.west
+        elif exit_id == 4:
+            return self.up
+        elif exit_id == 5:
+            return self.down
+        return 0

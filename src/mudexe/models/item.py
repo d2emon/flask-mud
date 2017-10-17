@@ -16,7 +16,7 @@
 
 
 class Item():
-    def __init__(self):
+    def __init__(self, id=None):
         # Objects
         self.item_id = 0
         self.name = ""
@@ -33,6 +33,9 @@ class Item():
         self.state = 0  # 1
         self.bits = [False for i in range(16)]  # tstbit 2
         self.carrf = 0  # 3
+
+        if id is not None:
+            self.item_id = id
 
     @classmethod
     def all(cls):
@@ -564,3 +567,28 @@ class Weather():
         if self.climate_state == 4:
             return "<c>A blizzard is howling around you</c>\n"
         return "None"
+
+
+def Door():
+    def __init__(self, id=0):
+        door_id = -(id + 1000)
+        self.item = Item(id=door_id)
+        self.back = Item(id=door_id)  # ^ 1  # other door side
+
+    def is_invisible(self, room):
+        if self.item.name == "door":
+            return True
+        if room.isdark():
+            return True
+        if not self.item.desc[self.item.state]:
+            return True
+        return False
+
+    def location(self):
+        if self.item.state == 0:
+            return self.back.loc
+
+        if self.is_invisible:
+            raise GoError()  # Invis doors
+        else:
+            raise GoError("The door is not open")

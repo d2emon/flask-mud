@@ -12,12 +12,29 @@ from .models import Player
 
 from .mud.user import User as GameUser
 from .mud.tty import PageTerminal
+from .mud.exceptions import GoError
 
 
 from .gamego.signals import sig_init, do_signal, SIGALRM
 
 
 mudexe = Blueprint('mudexe', __name__)
+
+
+EXITS = {
+    "north": 0,
+    "east": 1,
+    "south": 2,
+    "west": 3,
+    "up": 4,
+    "down": 5,
+    "n": 0,
+    "e": 1,
+    "s": 2,
+    "w": 3,
+    "u": 4,
+    "d": 5,
+}
 
 
 @mudexe.route("/start/<username>")
@@ -60,17 +77,14 @@ def play_game():
     if user is None:
         return redirect(url_for("mudexe.start_game", username="User"))
 
-
     sig_init()
     game_user = GameUser(user.username)
     if not game_user.load():
         session["user_id"] = 0
         return redirect(url_for("mudexe.start_game", username="User"))
 
-
     terminal = PageTerminal("MUD_PROGRAM_NAME", user.username)
     terminal.set_user(game_user)
-
 
     # Get last active
     last_active = session.get("last_active")
@@ -115,3 +129,34 @@ def play_game():
         text=terminal.text,
         time_to_turn=time_to_turn,
     )
+
+
+@mudexe.route("/go/<direction>")
+def go(direction):
+    """
+    Render game page
+    """
+    user_id = session.get("user_id", 0)
+    user = User.query.get(user_id)
+    if user is None:
+        return redirect(url_for("mudexe.start_game", username="User"))
+    game_user = GameUser(user.username)
+    if not game_user.load():
+        session["user_id"] = 0
+        return redirect(url_for("mudexe.start_game", username="User"))
+
+    try:
+        # if brkword is None:
+        if direction is None:
+            raise GoError("GO where ?")
+        if direction == "rope":
+            direction = "up"
+        exit_id = EXITS.get(direction)
+        if exit_id is None:
+            raise GoError("Thats not a valid direction")
+
+        game_user.go(exit_id)
+    except GoError as e:
+        flash(e)
+
+    return redirect(url_for("mudexe.play_game"))

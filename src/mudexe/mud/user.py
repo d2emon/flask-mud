@@ -79,6 +79,10 @@ class User():
     wd_them = ""
     # ???
     wd_there = ""
+    # ???
+    in_ms = ""
+    # ???
+    out_ms = ""
 
     def __init__(self, name):
         self.name = name  # globme
@@ -308,10 +312,16 @@ class User():
         self.buff.bprintf("\nSaving %s\n" % (self.name))
         self.person.save()
 
-    def trapch(self, chan):
+    def trapch(self, chan=None):
+        if chan is None:
+            chan = self.location
+
         self.world.openworld()
         self.player.location = chan
-        self.lookin()
+        # ???
+        self.player.save()
+        # ???
+        self.look()
 
     def loseme(self):
         alarm.sig_aloff()
@@ -497,3 +507,91 @@ class User():
         else:
             self.wd_him = p.name
         self.wd_them = self.name
+
+    def go(self, direction):
+        EXITS = [
+            "north",
+            "east",
+            "south",
+            "west",
+            "up",
+            "down",
+        ]
+
+        if self.in_fight > 0:
+            raise GoError("You can't just stroll out of a fight!\nIf you wish to leave a fight, you must FLEE in a direction")
+        # if objects[32].iscarrby(player) and players[25].location = player.location and player[25].name:
+        #     raise GoError("<c>The Golem</c> bars the doorway!")
+        # if chkcrip():
+        #     return
+        room = Location.search(self.location)
+        new_room_id = room.exits(direction)
+        if new_room_id > -2000 and new_room_id < -999:
+            door = Door(new_room_id)
+            new_room_id = door.location
+
+        new_room = Location.search(new_room_id)
+        self.on_go(new_room, direction)
+
+        block = "<s user=\"%s\">%s has gone %s %s.\n</s>" % (
+            self.player.id,
+            self.name,
+            EXITS[direction],
+            self.out_ms
+        )
+        self.sendsys(self, -10000, text=block)
+
+        self.location = new_room_id
+
+        block = "<s user=\"%s\">%s %s\n</s>" % (
+            self.player.id,
+            self.name,
+            self.in_ms
+        )
+        self.sendsys(self, -10000, text=block)
+
+        self.trapch(self.location)
+
+    # Events
+    def on_go(self, location=None, direction=0):
+        if location is None:
+            return
+        if self.has_blocking_figure(direction, location):
+            raise GoError("<p>The Figure</p> holds you back\n<p>The Figure</p> says 'Only true sorcerors may pass'\n")
+        location.on_go(self.player, direction)
+
+    @property
+    def is_shielded(self):
+        for o in [
+            Item(id=113),
+            Item(id=114),
+            Item(id=89),
+        ]:
+            if o.iswornby(self.player):
+                return True
+        return False
+
+    @property
+    def is_sorceror(self):
+        for o in [
+            Item(id=101),
+            Item(id=102),
+            Item(id=103),
+        ]:
+            if o.iswornby(self.player):
+                return True
+        return False
+
+    def has_blocking_figure(self, direction, room):
+        if direction != 2:
+            return False
+        i = Player.query.fpbns("figure")
+        if i is None:
+            return False
+        if i == self.player:
+            return False
+        if room.id != self.location:
+            return False
+        if self.is_sorceror:
+            return False
+        return True
