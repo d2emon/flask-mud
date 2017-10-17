@@ -182,8 +182,10 @@ class User():
 
     def eorte(self):
         self.interrupt = self.time_to_interrupt()
-        if self.interrupt:
-            self.last_io_interrupt = datetime.now()
+        if not self.interrupt:
+            return
+
+        self.last_io_interrupt = datetime.now()
 
         # Tick invisibility counter
         self.invisibility_next_round()
@@ -329,10 +331,14 @@ class User():
         sntn = self
         self.buff.chksnp(sntn, self)
 
-    def deathroom(self):
+    def deathroom(self, room):
+        if not room.deathroom:
+            return
+        self.ail_blind = False
         if self.person.is_wizzard:
             self.buff.bprintf("<DEATH ROOM>\n")
         else:
+            self.buff.bprintf(self.look_room_description(room))
             self.loseme()
             raise DeathRoom
 
@@ -433,39 +439,23 @@ class User():
 
         self.world.closeworld()
 
-        room = Location.query.get(-room_id)
-        if room is None:
-            room = Location(id=room_id)
-            room.no_file()
+        room = Location.search(room_id)
 
         if self.person.is_wizzard:
             self.wd_there = room.name
 
-        if self.is_dark(room):
-            room_description = "It is dark\n"
-        else:
-            room_description = room.description
-
-        room_objects = []
-        room_people = []
         self.world.openworld()
 
         if room.nobr:
             self.brmode = False
 
         if room.deathroom:
-            self.ail_blind = False
-            room_objects = ""
-            room_people = ""
-            self.deathroom()
-
-        if self.brmode:
-            room_description = ""
+            self.deathroom(room)
 
         onlook()
         return {
             "room": room,
-            "description": room_description,
+            "description": self.look_room_description(room),
             "objects": self.look_room_objects(room),
             "people": self.look_room_people(room),
         }
@@ -475,6 +465,13 @@ class User():
         #     roomtext["objects"],
         #     roomtext["people"],
         # ]))
+
+    def look_room_description(self, room):
+        if self.brmode:
+            return ""
+        if self.is_dark(room):
+            return "It is dark"
+        return room.description
 
     def look_room_objects(self, room):
         if not self.cansee(room):

@@ -144,11 +144,18 @@ class Location(db.Model):
                     self.description += s
                 self.getstr()
 
-    def no_file(self):
-        self.deathroom = False
-        self.nobr = False
-        self.description = "\nYou are on channel %s\n" % (self.id)
-        return
+    @classmethod
+    def search(cls, id=0):
+        l = cls.query.get(id)
+
+        if l is not None:
+            return l
+
+        l = cls(id=id)
+        l.deathroom = False
+        l.nobr = False
+        l.description = "\nYou are on channel %s\n" % (id)
+        return l
 
     def list_objects(self, user):
         """
