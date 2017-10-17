@@ -502,3 +502,41 @@ a++;
 return(0);
 }
     """
+
+
+class Weather(Item):
+    CLIMATES = [
+        range(5),
+        [n % 2 for n in range(5)],
+        [0, 3, 4, 3, 4],
+    ]
+
+    def __init__(self, climate_id=0):
+        Item.__init__(self)
+        self.state = 1
+        self.climate_id = climate_id
+        self.climate = self.CLIMATES[climate_id]
+
+    @property
+    def climate_state(self):
+        return self.climate[self.state]
+
+    def oplong(self, debug=False):
+        """
+        showwthr
+        """
+        if self.climate_state == 1:
+            if self.climate_id == 1:
+                res = ""
+                res += "It is raining, a gentle mist of rain, which sticks to everything around\n"
+                res += "you making it glisten and shine. High in the skies above you is a rainbow\n"
+                return res
+            else:
+                return "<c>It is raining\n</c>"
+        if self.climate_state == 2:
+            return "<c>The skies are dark and stormy\n</c>"
+        if self.climate_state == 3:
+            return "<c>It is snowing</c>\n"
+        if self.climate_state == 4:
+            return "<c>A blizzard is howling around you</c>\n"
+        return "None"

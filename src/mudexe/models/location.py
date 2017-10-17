@@ -2,7 +2,7 @@ from app import db
 from global_vars import logger
 
 
-from .item import Item
+from .item import Item, Weather
 from .player import Player
 
 
@@ -80,16 +80,9 @@ class Location(db.Model):
         # return x
         return None
 
-    # ???
     def closeroom(self):
-        logger().debug("<<< fclose(%s)", self)
-
-    # ???
-    def showwthr(self):
-        logger().debug("<<< showwthr()")
-        wthr = Item()
-        wthr.desc.append("WEATHER")
-        return wthr
+        # logger().debug("<<< fclose(%s)", self)
+        return None
 
     # ???
     def getstr(self):
@@ -171,6 +164,7 @@ class Location(db.Model):
         """
         lisobs
         """
+        weather = self.weather
         res = []
         res += self.objects_at(
             flannel=1,
@@ -178,7 +172,8 @@ class Location(db.Model):
             debug=user.debug_mode,
             user=user
         )
-        res += [self.showwthr(), ]
+        if weather:
+            res.append(weather)
         res += self.objects_at(
             flannel=0,
             include_destroyed=user.person.is_wizzard,
@@ -257,3 +252,32 @@ class Location(db.Model):
             return "Nothing\n"
         res += "\n"
         return res
+
+    @property
+    def weather(self):
+        if not self.outdoors:
+            return None
+        return Weather(self.climate)
+
+    @property
+    def outdoors(self):
+        if self.id in [100, 101, 102]:
+            return True
+        # elif self.id == 183:
+        #     return False
+        elif self.id == 170:
+            return False
+        else:
+            if self.id > 168 and self.id < 191:
+                return True
+            if self.id > 172 and self.id < 181:
+                return True
+        return False
+
+    @property
+    def climate(self):
+        if self.id > 178 and self.id < 199:
+            return 1
+        if self.id >= 100 and self.id <= 178:
+            return 2
+        return 0

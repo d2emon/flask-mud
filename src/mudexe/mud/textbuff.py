@@ -17,7 +17,7 @@ class BaseOutput():
         ct = 0
         while s[ct]:
             if s[ct] != '\001':
-                fputc(s[ct], f)
+                output.putc(s[ct])
                 ct += 1
                 continue
             ct += 1
@@ -187,48 +187,35 @@ def pfile(stri, ct, f):
 
 def pndeaf(stri, ct, f):
     ct, x = tocontinue(stri, ct, 256)
-    """
-    extern long ail_deaf;
-    if(!ail_deaf)fprintf(file,"%s",x);
-    """
+    # if not user.ail_deaf:
+    #     f.printf(x)
     return ct
 
 
 def pcansee(stri, ct, f):
     ct, x = tocontinue(stri, ct, 23)
-    """
-    char z[257];
-    long a;
-    a=fpbns(x);
-    if(!seeplayer(a))
-       {
-       ct=tocontinue(str,ct,z,256);
-       return(ct);
-       }
-    ct=tocontinue(str,ct,z,256);
-    fprintf(file,"%s",z);
-    """
+    # a = Player.query.fpbns(x)
+    # if not seeplayer(a):
+    #     ct, z = tocontinue(stri, ct, 256)
+    #     return ct
+    # ct, z = tocontinue(stri, ct, 256)
+    # f.printf(z)
     return ct
 
 
 def prname(stri, ct, f):
     ct, x = tocontinue(stri, ct, 24)
-    """
-    if(!seeplayer(fpbns(x)))
-    fprintf(file,"Someone");
-    else
-      fprintf(file,"%s",x);
-    """
+    # if not seeplayer(Player.fpbns(x)):
+    #     f.printf("Someone")
+    # else:
+    #     f.printf(x)
     return ct
 
 
 def pndark(stri, ct, f):
     ct, x = tocontinue(stri, ct, 256)
-    """
-    extern long ail_blind;
-    if((!isdark())&&(ail_blind==0))
-    fprintf(file,"%s",x);
-    """
+    # if not user.isdark() and not user.ail_blind:
+    #     f.printf(x)
     return ct
 
 
@@ -247,29 +234,25 @@ def tocontinue(stri, ct, mx):
 
 def ppndeaf(stri, ct, f):
     ct, x = tocontinue(stri, ct, 24)
-    """
-    extern long ail_deaf;
-    long a;
-    if(ail_deaf) return(ct);
-    a=fpbns(x);
-    if(seeplayer(a)) fprintf(file,"%s",x);
-    else
-      fprintf(file,"Someone");
-    """
+    # if user.ail_deaf:
+    #     return ct
+    # a = Player.fpbns(x)
+    # if seeplayer(a):
+    #     f.printf(x)
+    # else:
+    #     f.printf("Someone")
     return ct
 
 
 def ppnblind(stri, ct, f):
     ct, x = tocontinue(stri, ct, 24)
-    """
-    extern long ail_blind;
-    long a;
-    if(ail_blind) return(ct);
-    a=fpbns(x);
-    if(seeplayer(a)) fprintf(file,"%s",x);
-    else
-       fprintf(file,"Someone");
-    """
+    # if user.ail_blind:
+    #     return ct
+    # a = Player.query.fpbns(x)
+    # if seeplayer(a):
+    #     f.printf(x)
+    # else:
+    #     f.printf("Someone")
     return ct
 
 
@@ -302,11 +285,9 @@ void logcom()
 
 def pnotkb(stri, ct, f):
     ct, x = tocontinue(stri, ct, 127)
-    """
-    extern long iskb;
-    if(iskb) return(ct);
-    fprintf(file,"%s",x);
-    """
+    # if user.iskb:
+    #     return ct
+    # f.printf(x)
     return ct
 
 
