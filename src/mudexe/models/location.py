@@ -1,5 +1,6 @@
 from app import db
 # from global_vars import logger
+import random
 
 
 from .item import Item, Weather
@@ -86,6 +87,10 @@ class Location(db.Model):
     def closeroom(self):
         # logger().debug("<<< fclose(%s)", self)
         return None
+
+    @classmethod
+    def starting(cls):
+        return random.choice(STARTING_LOCATIONS)
 
     @property
     def zone(self):

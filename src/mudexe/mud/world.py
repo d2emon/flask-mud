@@ -96,14 +96,31 @@ class World():
         # fcloselock(self.filrf)
         self.filrf = None
 
+    @property
+    def is_full(self):
+        return len(Player.query.all()) > self.maxu
+
+    @property
+    def is_need_cleaning(self):
+        return (self.findend() - self.findstart()) >= 199
+
     def put_player(self, user):
+        """
+        PutMeOn
+        """
+        user.iamon = False
         self.openworld()
+
         if Player.query.fpbn(user.model.username):
             raise AlreadyOnMud()
-        if len(Player.query.all()) > self.maxu:
+
+        if self.is_full:
             raise MudFull()
+
         player = Player(user=user.model)
         player.puton(user)
+
+        user.iamon = True
         return player
 
     def dumpstuff(self, user, location):

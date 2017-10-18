@@ -141,6 +141,16 @@ class Player(db.Model):
         self.sex = SEX_MALE
         self.save()
 
+    def from_person(self, person):
+        self.strength = person.strength
+        self.level = person.level
+        if person.level < 10000:
+            self.visibility = 0
+        else:
+            self.visibility = -1
+        self.sex = person.sex
+        self.helping = -1
+
     def delete(self):
         db.session.delete(self)
         db.session.commit()
