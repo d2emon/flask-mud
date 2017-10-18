@@ -5,7 +5,10 @@ from app import app
 # from global_vars import logger
 
 from auth.models import User
-from .models import Player
+
+from .models import Person
+from .models.player import Player
+
 # from .models import GameSession
 # from .forms import GameSessionForm
 
@@ -45,17 +48,32 @@ def start_game(username):
     sig_init()
 
     user_id = session.get("user_id", 0)
+    print("USER_ID", user_id)
     if user_id:
         return redirect(url_for("mudexe.play_game"))
 
     game_user = GameUser(username)
     user = game_user.model
+
+    terminal = PageTerminal("MUD_PROGRAM_NAME", username)
+    terminal.set_user(game_user)
+
     app.logger.info("GAME ENTRY: %s[%s]", user.fullname, user.uid)
+
+    game_user.prepare_game()
+    game_user.start_game()
+    game_user.i_setup = True
+
+    person = Person.query.by_user(user)
+    if person is None:
+        return redirect(url_for("mudexe.ask_sex"))
+
     try:
-        game_user.prepare_game()
+        # game_user.prepare_game()
+        session["user_id"] = user.id
     except Exception as e:
         flash(e)
-    session["user_id"] = user.id
+        session["user_id"] = 0
 
     return render_template(
         'mudexe/start.html',
@@ -71,13 +89,28 @@ def load_user():
     user_id = session.get("user_id", 0)
     user = User.query.get(user_id)
     if user is None:
+        print("NO USER")
         session["user_id"] = 0
         return None
     game_user = GameUser(user.username)
     if not game_user.load():
+        print("NO USER IN GAME")
         session["user_id"] = 0
         return None
     return game_user
+
+
+@mudexe.route("/ask-sex")
+def ask_sex():
+    """
+    Render ask sex page
+    """
+    user = load_user()
+    if user is None:
+        return redirect(url_for("mudexe.start_game", username="User"))
+
+    user.person = Person.initme(user.model, 0)
+    return redirect(url_for("mudexe.play_game"))
 
 
 @mudexe.route("/play")

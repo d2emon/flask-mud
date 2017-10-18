@@ -120,7 +120,8 @@ class User():
         # self.terminal.set_user(self)
         self.world = World()
         self.player = Player.query.by_user(self.model)
-        self.person = Person.query.by_user(self.model)
+        self.person = Person.initme(self.model)
+        # self.person = Person.query.by_user(self.model)
 
     # ???
     def on_timing(self):
@@ -150,14 +151,14 @@ class User():
         return True
 
     def prepare_game(self):
+        print(self)
+
         self.message_id = None
         self.put_player()
         self.rte()
         self.world.closeworld()
 
         self.message_id = None
-        self.special(".g")
-        self.i_setup = True
 
     def special(self, cmd):
         special(cmd, self)
@@ -244,7 +245,7 @@ class User():
     def start_game(self):
         self.curmode = 1
         rooms = STARTING_LOCATIONS
-        self.initme()
+        self.person = Person.initme(self.model)
         self.world.openworld()
         self.player.strength = self.person.strength
         self.player.level = self.person.level
@@ -293,26 +294,6 @@ class User():
     def dumpitems(self):
         self.world.dumpstuff(self.player, self.location)
 
-    def initme(self):
-        person = Person.query.by_user(self.model)
-        if person is None:
-            self.buff.bprintf("Creating character....")
-            person = Person(user=self.model)
-            person.sex = self.terminal.asksex()
-        person.save()
-        self.person = person
-        return person
-
-    def saveme(self):
-        # self.person.strength = self.my_str
-        # self.person.level = self.my_lev
-        self.person.sex = self.player.sex
-        # self.person.sco = self.my_sco
-        if self.zapped:
-            return
-        self.buff.bprintf("\nSaving %s\n" % (self.name))
-        self.person.save()
-
     def trapch(self, chan=None):
         if chan is None:
             chan = self.location
@@ -324,24 +305,6 @@ class User():
         # ???
         self.look()
 
-    def loseme(self):
-        alarm.sig_aloff()
-        # No interruptions while you are busy dying
-        # ABOUT 2 MINUTES OR SO
-        self.i_setup = False
-        self.world.openworld()
-        self.dumpitems()
-        if self.player.visibility < 10000:
-            bk = "%s has departed from AberMUDII\n" % (self.name)
-            self.sendsys(self, -10113, 0, bk)
-        if not self.zapped:
-            self.saveme()
-        self.player.delete()
-        self.world.closeworld()
-
-        sntn = self
-        self.buff.chksnp(sntn, self)
-
     def deathroom(self, room):
         if not room.deathroom:
             return
@@ -350,8 +313,23 @@ class User():
             self.buff.bprintf("<DEATH ROOM>\n")
         else:
             self.buff.bprintf(self.look_room_description(room))
-            self.loseme()
+            self.death()
             raise DeathRoom
+
+    def death(self):
+        self.i_setup = False
+        self.world.openworld()
+        self.dumpitems()
+        if self.player.visibility < 10000:
+            bk = "%s has departed from AberMUDII\n" % (self.name)
+            self.sendsys(user, -10113, 0, bk)
+        if not self.zapped:
+            self.person.saveme(self, zapped=self.zapped)
+        self.player.delete()
+        self.world.closeworld()
+
+        sntn = self
+        self.buff.chksnp(sntn, user)
 
     @property
     def prmpt(self):
@@ -576,7 +554,7 @@ class User():
         self.world.closeworld()
         self.curmode = 0
         self.location = 0
-        self.saveme()
+        self.person.saveme(self, zapped=self.zapped)
         # raise Crapup("Goodbye")
 
     # Events
