@@ -38,21 +38,6 @@ Sectors 1-n  in pairs ie [128 words]
 """
 
 
-def vcpy(dest, offd, source, offs, l):
-    """
-long *dest,*source;
-long offd,offs,len;
-    {
-    long c;
-    c=0;
-    while(c<len)
-       {
-       dest[c+offd]=source[c+offs];
-       c++;
-       }
-    }
-    """
-
 # long gurum=0;
 
 
@@ -86,22 +71,6 @@ def cleanup(inpbk):
 
 # long dsdb=0;
 # long moni=0;
-
-
-def broad(mesg):
-    """
- char *mesg;
-    {
-extern long rd_qd;
-char bk2[256];
-long block[128];
-rd_qd=1;
-block[1]= -1;
-strcpy(bk2,mesg);
-vcpy(block,2,(long *)bk2,0,126);
-send2(block);
-}
-    """
 
 
 def tbroad(message):

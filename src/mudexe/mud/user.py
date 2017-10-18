@@ -58,15 +58,11 @@ class DeathRoom(Crapup):
 
 class User():
     # ???
-    ail_blind = False
-    # ???
     in_fight = 0
     # ???
     fighting = None
     # ???
     wpnheld = -1
-    # ???
-    ail_dumb = False
     # ???
     has_farted = False
     # ???
@@ -83,6 +79,7 @@ class User():
     in_ms = ""
     # ???
     out_ms = ""
+
 
     def __init__(self, name):
         self.name = name  # globme
@@ -112,6 +109,11 @@ class User():
         self.me_ivct = 0
         self.me_drunk = 0
         self.me_cal = 0
+
+        self.ail_dumb = False
+        self.ail_crip = False
+        self.ail_blind = False
+        self.ail_deaf = False
 
         # Other
         self.buff = TextBuffer()
@@ -413,6 +415,32 @@ class User():
         self.person.saveme(self, zapped=self.zapped)
         # raise Crapup("Goodbye")
 
+
+    def reset(self):
+        """
+        rescom
+        """
+        if not self.person.is_wizzard:
+            raise Exception("What ?")
+
+        self.broad("Reset in progress....\nReset Completed....\n")
+
+        # Load objinfo
+        # b = openlock(RESET_DATA, "r")
+        # objinfo = b.sec_read(0, 4 * numobs)
+        # b.fcloselock()
+
+        # Write reset time
+        # i = time()
+        # a = fopen(RESET_T, "w")
+        # a.fprintf("Last Reset At %s\n" % (ctime(i)))
+        # a.fclose()
+        # a = fopen(RESET_N, "w")
+        # a.fprintf("%ld\n" % (i))
+        # a.fclose(a)
+
+        # resetplayers()
+
     # Events
     def on_go(self, location=None, direction=0):
         if location is None:
@@ -516,7 +544,7 @@ class User():
             to_player = to_player.player
         self.send2(from_player, to_player, message_code, channel, text)
 
-    def send2(self, from_player, to_player, message_code, channel, text):
+    def send2(self, from_player=None, to_player=None, message_code=0, channel=None, text=""):
         msg = Message(
             from_player=from_player,
             to_player=to_player,
@@ -529,6 +557,10 @@ class User():
             # self.cleanup()
             # longwthr()
             pass
+
+    def broad(self, message):
+        # rd_qd = 1
+        self.send2(text=message)
 
     # Send shortcuts
     def send_text(self, text, user_id=None):

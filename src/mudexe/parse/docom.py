@@ -15,172 +15,120 @@ void pncom()
 		bprintf("There           : %s\n",wd_there);
 	}
 }
+"""
 
- rescom()
-    {
-    extern long my_lev;
-    extern long objinfo[],numobs;
-    FILE *b;
-    char dabk[32];
-    long i;
-    FILE *a;
-    if(my_lev<10)
-       {
-       bprintf("What ?\n");
-       return;
-       }
-    broad("Reset in progress....\nReset Completed....\n");
-    b=openlock(RESET_DATA,"r");
-    sec_read(b,objinfo,0,4*numobs);
-    fcloselock(b);
-    time(&i);
-    a=fopen(RESET_T,"w");
-    fprintf(a,"Last Reset At %s\n",ctime(&i));
-    fclose(a);
-    a=fopen(RESET_N,"w");
-    fprintf(a,"%ld\n",i);
-    fclose(a);
-    resetplayers();
-    }
 
- lightning()
-    {
-    extern long my_lev;
-    long  vic;
-    extern char wordbuf[];
-    extern char globme[];
-    extern long curch;
-    if(my_lev<10)
-       {
-       bprintf("Your spell fails.....\n");
-       return;
-       }
-    if(brkword()== -1)
-       {
-       bprintf("But who do you wish to blast into pieces....\n");
-       return;
-       }
-    vic=fpbn(wordbuf);
-    if(vic== -1)
-       {
-       bprintf("There is no one on with that name\n");
-       return;
-       }
-    sendsys(pname(vic),globme,-10001,ploc(vic),"");
-    syslog("%s zapped %s",globme,pname(vic));
-    if(vic>15)woundmn(vic,10000); /* DIE */
-    broad("\001dYou hear an ominous clap of thunder in the distance\n\001");
-    }
+def lightning(self, player=None):
+    if self.person.level < 10:
+        raise Exception("Your spell fails.....")
+    # if brkword is None:
+    if player is None:
+        raise Exception("But who do you wish to blast into pieces....")
+    vic = Player.fpbn(player)
+    if vic is None:
+        raise Exception("There is no one on with that name")
+    vic.sendsys(self, -10001, text="")
+    logger().info("%s zapped %s" % (self.name, vic.name))
+    if vic.id > 15:
+        vic.woundmn(10000)
+        # DIE
+    broad("<d>You hear an ominous clap of thunder in the distance\n</d>");
 
- eatcom()
-    {
-    long b;
-    extern char wordbuf[];
-    extern long curch;
-    extern long mynum;
-    extern long curch;
-    extern long my_str;
-    extern long my_lev;
-    extern long my_sco;
-    if(brkword()== -1)
-       {
-       bprintf("What\n");
-       return;
-       }
 
-    if((curch== -609)&&(!strcmp(wordbuf,"water"))) strcpy(wordbuf,"spring");
-    if(!strcmp(wordbuf,"from")) brkword();
-    b=fobna(wordbuf);
-    if(b== -1)
-       {
-       bprintf("There isn't one of those here\n");
-       return;
-       }
+def eatcom(self, food=None):
+    # if brkword is None:
+    if food is None:
+        Exception("What")
 
-    switch(b)
-       {
-       case 11:
-          bprintf("You feel funny, and then pass out\n");
-          bprintf("You wake up elsewhere....\n");
-          teletrap(-1076);
-          break;
-       case 75:
-          bprintf("very refreshing\n");
-          break;
-       case 175:
-          if(my_lev<3)
-             {
-             my_sco+=40;
-             calibme();
-             bprintf("You feel a wave of energy sweeping through you.\n");
-             break;
-             }
-          else
-             {
-             bprintf("Faintly magical by the taste.\n");
-             if(my_str<40) my_str+=2;
-             calibme();
-             }
-          break;
-       default:
-          if(otstbit(b,6))
-             {
-             destroy(b);
-             bprintf("Ok....\n");
-             my_str+=12;
-             calibme();
-             }
-          else
-             bprintf("Thats sure not the latest in health food....\n");
-          break;
-       }
-    }
+    if self.location == 609 and food == "water":
+        food = "spring"
+    # if wordbuff == "from":
+    #     brkword
+    b = Item.fobna(food)
+    if b is None:
+        Exception("There isn't one of those here")
+    if b.id == 11:
+        self.buff.bprintf("You feel funny, and then pass out\n")
+        self.buff.bprintf("You wake up elsewhere....\n")
+        self.teletrap(-1076)
+    elif b.id == 75:
+        self.buff.bprintf("very refreshing\n")
+    elif b.id == 175:
+        if self.person.level < 3:
+            self.person.score += 40
+            calibme()
+            self.buff.bprintf("You feel a wave of energy sweeping through you.\n")
+        else:
+            self.buff.bprintf("Faintly magical by the taste.\n")
+            if self.person.strength < 40:
+                self.person.strength += 2
+                calibme()
+    else:
+        if b.bit[6]:
+            b.destroy()
+            self.buff.bprintf("Ok....\n")
+            self.person.strength += 12
+            calibme()
+        else:
+            self.buff.bprintf("Thats sure not the latest in health food....\n")
 
- calibme()
-    {
-    /* Routine to correct me in user file */
-    long  a;
-    extern long mynum,my_sco,my_lev,my_str,my_sex,wpnheld;
-    extern char globme[];
-    long  b;
-    char *sp[128];
-    extern long i_setup;
-    if(!i_setup) return;
-    b=levelof(my_sco);
-    if(b!=my_lev)
-       {
-       my_lev=b;
-       bprintf("You are now %s ",globme);
-       syslog("%s to level %d",globme,b);
-       disle3(b,my_sex);
-       sprintf(sp,"\001p%s\001 is now level %d\n",globme,my_lev);
-       sendsys(globme,globme,-10113,ploc(mynum),sp);
-       if(b==10) bprintf("\001f%s\001",GWIZ);
-       }
-    setplev(mynum,my_lev);
-    if(my_str>(30+10*my_lev)) my_str=30+10*my_lev;
-    setpstr(mynum,my_str);
-    setpsex(mynum,my_sex);
-    setpwpn(mynum,wpnheld);
-    }
 
- levelof(score)
-    {
-    extern long my_lev;
-    score=score/2;  /* Scaling factor */
-    if(my_lev>10) return(my_lev);
-    if(score<500) return(1);
-    if(score<1000) return(2);
-    if(score<3000) return(3);
-    if(score<6000) return(4);
-    if(score<10000) return(5);
-    if(score<20000) return(6);
-    if(score<32000) return(7);
-    if(score<44000) return(8);
-    if(score<70000) return(9);
-    return(10);
-    }
+def calibme(self):
+    """
+    Routine to correct me in user file
+    """
+    # long  a;
+    # extern long mynum,my_sco,my_lev,my_str,my_sex,wpnheld;
+    # extern char globme[];
+    # long  b;
+    # char *sp[128];
+    # extern long i_setup;
+    if not self.i_setup:
+        return
+    b = levelof(self.person.score)
+    if b != self.person.level:
+        self.person.level = b
+        self.buff.bprintf("You are now %s " % (self.name))
+        logger().info("%s to level %d", self.name, b)
+        disle3(b, self.person.sex)
+        sp = "<p>%s</p> is now level %d\n" % (self.name, self.person.level)
+        self.sendsys(self, -10113, self.player.location, sp )
+        if b == 10:
+            self.buff.bprintf("<f>%s</f>" % ("GWIZ"))
+        self.player.level = self.person.level
+        if self.person.strength > (30 + 10 * self.person.level):
+            self.person.strength = 30 + 10 * self.person.level
+        self.player.strength = self.person.strength
+        self.player.sex = self.person.sex
+        self.player.weapon = self.wpnheld
 
+def levelof(score):
+    # extern long my_lev;
+    score = score / 2  # Scaling factor
+    if self.person.level > 10:
+        return self.person.level
+    if score < 500:
+        return 1
+    if score < 1000:
+        return 2
+    if score < 3000:
+        return 3
+    if score < 6000:
+        return 4
+    if score < 10000:
+        return 5
+    if score < 20000:
+        return 6
+    if score < 32000:
+        return 7
+    if score < 44000:
+        return 8
+    if score < 70000:
+        return 9
+    return 10
+
+
+"""
  playcom()
     {
     extern char wordbuf[];
@@ -204,54 +152,42 @@ void pncom()
        return;
        }
     }
+"""
 
- shoutcom()
-    {
-    extern long curch,my_lev;
-    extern char globme[];
-    auto char blob[200];
-    if(chkdumb()) return;
-    getreinput(blob);
-    if(my_lev>9)
-       sendsys(globme,globme,-10104,curch,blob);
-    else
-       sendsys(globme,globme,-10002,curch,blob);
-    bprintf("Ok\n");
-    }
 
- saycom()
-    {
-    extern long curch;
-    extern char globme[];
-    auto char blob[200];
-    if(chkdumb()) return;
-    getreinput(blob);
-    sendsys(globme,globme,-10003,curch,blob);
-    bprintf("You say '%s'\n",blob);
-    }
+def shoutcom(self, blob=""):
+    if chkdumb():
+        return
+    # blob = getreinput()
+    if self.person.level > 9:
+        self.sendsys(self, -10104, self.location, blob)
+    else:
+        self.sendsys(self, -10002, self.location, blob)
+    self.buff.bprintf("Ok\n")
 
- tellcom()
-    {
-    extern long curch;
-    extern char wordbuf[],globme[];
-    char blob[200];
-    long  a,b;
-    if(chkdumb()) return;
-    if(brkword()== -1)
-       {
-       bprintf("Tell who ?\n");
-       return;
-       }
-    b=fpbn(wordbuf);
-    if(b== -1)
-       {
-       bprintf("No one with that name is playing\n");
-       return;
-       }
-    getreinput(blob);
-    sendsys(pname(b),globme,-10004,curch,blob);
-    }
 
+def saycom(self, blob=""):
+    if chkdumb():
+        return
+    # blob = getreinput()
+    self.sendsys(self, -10003, self.location, blob)
+    self.buff.bprintf("You say '%s'\n" % (blob))
+
+
+def tellcom(self, player=None, blob=""):
+    if chkdumb():
+        return
+    # if(brkword()== -1)
+    if player is None:
+        raise Exception("Tell who ?")
+    b = Player.query.fpbn(player)
+    if b is None:
+        raise Exception("No one with that name is playing")
+    # getreinput(blob);
+    b.sendsys(self, -10004, self.location, blob)
+
+
+"""
  scorecom()
     {
     extern long my_str,my_lev,my_sco;

@@ -6,6 +6,47 @@ from global_vars import logger
 from .item import Item
 
 
+class PlayerRes():
+    def __init__(self, name, location, strength, sex, level):
+        self.name = name
+        self.location = location
+        self.strength = strength
+        self.sex = sex
+        self.level = level
+
+
+PINIT = [
+    PlayerRes("The Wraith", 1077, 60, 0, -2),
+    PlayerRes("Shazareth", 1080, 99, 0, -30),
+    PlayerRes("Bomber", 308, 50, 0, -10),
+    PlayerRes("Owin", 311, 50, 0, -11),
+    PlayerRes("Glowin", 318, 50, 0, -12),
+    PlayerRes("Smythe", 320, 50, 0, -13),
+    PlayerRes("Dio", 332, 50, 0, -14),
+    PlayerRes("The Dragon", 326, 500, 0, -2),
+    PlayerRes("The Zombie", 639, 20, 0, -2),
+    PlayerRes("The Golem", 1056, 90, 0, -2),
+    PlayerRes("The Haggis", 341, 50, 0, -2),
+    PlayerRes("The Piper", 630, 50, 0, -2),
+    PlayerRes("The Rat", 1064, 20, 0, -2),
+    PlayerRes("The Ghoul", 129, 40, 0, -2),
+    PlayerRes("The Figure", 130, 90, 0, -2),
+    PlayerRes("The Ogre", 144, 40, 0, -2),
+    PlayerRes("Riatha", 165, 50, 0, -31),
+    PlayerRes("The Yeti", 173, 80,  0, -2),
+    PlayerRes("The Guardian", 197, 50, 0, -2),
+    PlayerRes("Prave", 201, 60, 0, -400),
+    PlayerRes("Wraith", 350, 60, 0, -2),
+    PlayerRes("Bath", 1, 70, 0, -401),
+    PlayerRes("Ronnie", 809, 40, 0, -402),
+    PlayerRes("The Mary", 1, 50, 0, -403),
+    PlayerRes("The Cookie", 126, 70, 0, -404),
+    PlayerRes("MSDOS", 1, 50, 0, -405),
+    PlayerRes("The Devil", 1, 70, 0, -2),
+    PlayerRes("The Copper", 1, 40, 0, -2),
+]
+
+
 SEX_MALE = 0
 SEX_FEMALE = 1
 
