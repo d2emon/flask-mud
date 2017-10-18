@@ -37,18 +37,74 @@ block content
                    | {% endfor %}
               | {% endfor %}
             | {% endif %}
+
+      .col-md-4
+        .row
+          .col-md-6
+            .row
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='north') }}") North
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='up') }}") Up
+            .row
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='west') }}") West
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='east') }}") East
+              .col-md-3
+                | &nbsp;
+            .row
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='south') }}") South
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Down
+          .col-md-6
+            ul
+              li
+                a(href="{{ url_for('mudexe.quit') }}") Quit
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Take
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Drop
+        div
+          | "look","i","inv","inventory","who","reset","zap","eat","drink","play","shout","say","tell",
+          | "save","score","exorcise","give","steal","pinch","levels","help","value","stats","examine","read",
+          | "delete","pass","password","summon","weapon","shoot","kill","hit","fire","launch","smash","break",
+          | "laugh",
+          | "cry","burp","fart","hiccup","grin","smile","wink","snigger","pose","set",
+          | "pray","storm","rain","sun","snow","goto",
+          | "wear",
+          | "remove","put","wave","blizzard","open","close","shut","lock","unlock","force","light",
+          | "extinguish","where","turn","invisible","visible","pull","press","push","cripple","cure","dumb",
+          | "change","missile","shock","fireball","translocate","blow","sigh","kiss","hug","slap",
+          | "tickle","scream","bounce","wiz","stare","exits","crash","sing","grope","spray",
+          | "groan","moan","directory","yawn","wizlist","in","smoke","deafen","resurrect","log",
+          | "tss","rmedit","loc","squeeze","users","honeyboard","inumber","update","become","systat",
+          | "converse","snoop","shell","raw","purr","cuddle","sulk","roll","credits","brief",
+          | "debug","jump","wield","map","flee","bug","typo","pn","blind","patch","debugmode",
+          | "pflags","frobnicate",
+          | "strike",
+          | "setin","setout","setmin","setmout","emote","dig","empty"
         .game-log
           pre
             | {{text1}}
-        pre
-          | {{text}}
-        div
-          form
-            | {{prompt}}
-            input(type="text")
-        div
-          a(href="{{ url_for('mudexe.play_game') }}") Play
-      .col-md-4
+          div
+            form
+              | {{prompt}}
+              input(type="text", id="cmd", name="cmd")
+              input(type="submit")
+          pre
+            | {{text}}
         .data
           | {% if users %}
           ul.users

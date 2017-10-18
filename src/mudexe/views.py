@@ -67,24 +67,32 @@ def start_game(username):
     )
 
 
+def load_user():
+    user_id = session.get("user_id", 0)
+    user = User.query.get(user_id)
+    if user is None:
+        session["user_id"] = 0
+        return None
+    game_user = GameUser(user.username)
+    if not game_user.load():
+        session["user_id"] = 0
+        return None
+    return game_user
+
+
 @mudexe.route("/play")
 def play_game():
     """
     Render game page
     """
-    user_id = session.get("user_id", 0)
-    user = User.query.get(user_id)
+    user = load_user()
     if user is None:
         return redirect(url_for("mudexe.start_game", username="User"))
 
     sig_init()
-    game_user = GameUser(user.username)
-    if not game_user.load():
-        session["user_id"] = 0
-        return redirect(url_for("mudexe.start_game", username="User"))
 
-    terminal = PageTerminal("MUD_PROGRAM_NAME", user.username)
-    terminal.set_user(game_user)
+    terminal = PageTerminal("MUD_PROGRAM_NAME", user.name)
+    terminal.set_user(user)
 
     # Get last active
     last_active = session.get("last_active")
@@ -101,7 +109,7 @@ def play_game():
     if time_to_turn:
         do_signal(SIGALRM, terminal)
 
-    room_text = game_user.look()
+    room_text = user.look()
 
     terminal.on_text("test text")
     answer = terminal.text
@@ -113,9 +121,9 @@ def play_game():
     return render_template(
         'mudexe/view.html',
         title=terminal.title,
-        debug=game_user.debug_mode,
-        user=game_user,
-        room=game_user.room,
+        debug=user.debug_mode,
+        user=user,
+        room=user.room,
 
         room_text=room_text,
 
@@ -131,23 +139,19 @@ def play_game():
     )
 
 
+@mudexe.route("/go")
 @mudexe.route("/go/<direction>")
-def go(direction):
+def go(direction=""):
     """
     Render game page
     """
-    user_id = session.get("user_id", 0)
-    user = User.query.get(user_id)
+    user = load_user()
     if user is None:
-        return redirect(url_for("mudexe.start_game", username="User"))
-    game_user = GameUser(user.username)
-    if not game_user.load():
-        session["user_id"] = 0
         return redirect(url_for("mudexe.start_game", username="User"))
 
     try:
         # if brkword is None:
-        if direction is None:
+        if not direction:
             raise GoError("GO where ?")
         if direction == "rope":
             direction = "up"
@@ -155,7 +159,24 @@ def go(direction):
         if exit_id is None:
             raise GoError("Thats not a valid direction")
 
-        game_user.go(exit_id)
+        user.go(exit_id)
+    except GoError as e:
+        flash(e)
+
+    return redirect(url_for("mudexe.play_game"))
+
+
+@mudexe.route("/quit")
+def quit():
+    """
+    Quit game
+    """
+    user = load_user()
+    if user is None:
+        return redirect(url_for("mudexe.start_game", username="User"))
+
+    try:
+        user.quit()
     except GoError as e:
         flash(e)
 

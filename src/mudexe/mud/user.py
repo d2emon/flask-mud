@@ -10,7 +10,8 @@ from ..gamego.signals import alarm
 from ..models import Message, Person
 from ..models.player import Player, SEX_FEMALE
 from ..models.location import STARTING_LOCATIONS, Location
-from .exceptions import Crapup
+from ..models.item import Item, Door
+from .exceptions import Crapup, GoError
 from .textbuff import TextBuffer
 from .tty import special
 from .world import World
@@ -290,7 +291,7 @@ class User():
         #     longwthr()
 
     def dumpitems(self):
-        self.world.dumpstuff(self.mynum, self.location)
+        self.world.dumpstuff(self.player, self.location)
 
     def initme(self):
         person = Person.query.by_user(self.model)
@@ -551,6 +552,32 @@ class User():
         self.sendsys(self, -10000, text=block)
 
         self.trapch(self.location)
+
+    def quit(self):
+        # if isforce:
+        #     raise Exception("You can't be forced to do that")
+        self.rte()
+        self.world.openworld()
+
+        if self.in_fight:
+            raise Exception("Not in the middle of a fight!")
+
+        self.buff.bprintf("Ok")
+
+        xx = "%s has left the game\n" % (self.name)
+        self.sendsys(self, -10000, text=xx)
+
+        xx = "[ Quitting Game : %s ]\n" % (self.name)
+        self.sendsys(self, -10113, 0, text=xx)
+
+        self.dumpitems()
+        self.player.strength = -1
+        self.player.delete()
+        self.world.closeworld()
+        self.curmode = 0
+        self.location = 0
+        self.saveme()
+        # raise Crapup("Goodbye")
 
     # Events
     def on_go(self, location=None, direction=0):
