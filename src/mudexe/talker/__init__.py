@@ -88,28 +88,6 @@ char *message;
 # char  *tmpwiz=".";/* Illegal name so natural immunes are ungettable! */
 
 
-def split(block, nam1, nam2, work, luser):
-    """
- long *block;
- char *nam1;
- char *nam2;
- char *work;
- char *luser;
-    {
-    long wkblock[128],a;
-    vcpy(wkblock,0,block,2,126);
-    vcpy((long *)work,0,block,64,64);
-    a=scan(nam1,(char *)wkblock,0,"",".");
-    scan(nam2,(char *)wkblock,a+1,"",".");
-if((strncmp(nam1,"The ",4)==0)||(strncmp(nam1,"the ",4)==0))
-{
-if(!strcmp(lowercase(nam1+4),lowercase(luser))) return(1);
-}
-    return(!strcmp(lowercase(nam1),lowercase(luser)));
-    }
-    """
-
-
 def revise(cutoff):
     """
  long cutoff;

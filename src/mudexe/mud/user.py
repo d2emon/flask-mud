@@ -27,11 +27,6 @@ class NoWizzard(Exception):
 
 
 # ???
-def gamrcv(msg):
-    logger().debug("<<< gamrcv(%s)", msg)
-
-
-# ???
 def onlook():
     logger().debug("<<< onlook()")
 
@@ -123,6 +118,11 @@ class User():
         self.ail_crip = False
         self.ail_blind = False
         self.ail_deaf = False
+
+        self.in_ms = "has arrived."
+        self.out_ms = ""
+        self.mout_ms = "vanishes in a puff of smoke."
+        self.min_ms = "appears with an ear-splitting bang."
 
         # Other
         self.buff = TextBuffer()
@@ -493,6 +493,10 @@ class User():
         for message in messages:
             self.mstoout(message)
 
+        # ???
+        self.player.message_id = self.message_id
+        self.player.save()
+
         # Other
         self.update()
         self.eorte()
@@ -522,9 +526,9 @@ class User():
             self.sysctrl(msg)
 
     def sysctrl(self, msg):
-        gamrcv(msg)
+        self.gamrcv(msg)
 
-    def sendsys(self, to_player, message_code, channel=None, text=""):
+    def sendsys(self, from_player, message_code, channel=None, text=""):
         if channel is None:
             channel = self.location
         # if msg_code != -9900 and msg_code != -10021:
@@ -533,9 +537,9 @@ class User():
         #     block[64] = i[0]
         #     block[65] = i[1]
         #     block[66] = i[2]
-        from_player = self.player
-        if to_player is not None:
-            to_player = to_player.player
+        to_player = self.player
+        if from_player is not None:
+            from_player = from_player.player
         self.send2(from_player, to_player, message_code, channel, text)
 
     def send2(self, from_player=None, to_player=None, message_code=0, channel=None, text=""):
@@ -544,17 +548,53 @@ class User():
             to_player=to_player,
             message_code=message_code,
             # channel=channel,
-            text=text,
+            text="%d::%s" % (channel, text),
         )
         msg.save()
         if self.world.is_need_cleaning:
             # self.cleanup()
             # longwthr()
+            print("NEEDS CLEARING")
             pass
 
     def broad(self, message):
         self.buff.rd_qd = True
         self.send2(text=message)
+
+    def gamrcv(self, message):
+        # extern long zapped;
+        # extern long vdes,tdes,rdes,ades;
+        # auto long  zb[32];
+        # extern long curch;
+        # extern long my_lev;
+        # extern long my_sco;
+        # extern long my_str;
+        # extern long snoopd;
+        # extern long fl_com;
+        # char ms[128];
+        # extern long fighting,in_fight;
+        isme = message.is_to_player(self.player.id)
+        if message.message_code == -20000:
+            self.message_stop_fight(message, isme)
+        # elif message.message_code < -10099:
+        #     return new1rcv(isme, message)
+        elif message.message_code == -10000:
+            self.message_text(message, isme)
+
+    def message_text(self, message, isme):
+        # if isme:
+        #     return
+        # if message.location != user.location:
+        #     return
+        self.buff.bprintf(message.text)
+        self.buff.get_message(message.text)
+        return
+
+    def message_stop_fight(self, message, isme):
+        if Player.query.fpbns(message.to_user) != self.fighting:
+            return
+        self.in_fight = 0
+        self.fighting = None
 
     # Send shortcuts
     def send_text(self, text, user_id=None):

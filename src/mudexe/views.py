@@ -150,6 +150,11 @@ def play_game():
     terminal.text = ""
     terminal.do_loop()
 
+    chat = session.get("chat", [])
+    for s in user.buff.chat.splitlines():
+        chat.append(s)
+    session["chat"] = chat
+
     # do_signal(SIGTERM, terminal)
     return render_template(
         'mudexe/view.html',
@@ -159,6 +164,7 @@ def play_game():
         room=user.room,
 
         room_text=room_text,
+        chat=chat,
 
         users=User.query.all(),
         players=Player.query.all(),

@@ -114,6 +114,13 @@ block content
           | "pflags","frobnicate",
           | "strike",
           | "setin","setout","setmin","setmout","emote","dig","empty"
+        .chat(style="height: 200px;margin-bottom: 10px;")
+          pre(style="height: 100%;")
+            | {% if chat %}
+            | {% for s in chat %}
+            | {{s}}
+            | {% endfor %}
+            | {% endif %}
         .game-log
           pre
             | {{text1}}

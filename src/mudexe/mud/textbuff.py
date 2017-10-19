@@ -123,6 +123,7 @@ class TextBuffer():
 
     def makebfr(self):
         self.sysbuf = ""
+        self.chat = ""
 
     def pbfr(self, user):
         self.output.text = ""
@@ -147,6 +148,9 @@ class TextBuffer():
         alarm.unblock_alarm()
         print(self.output.text)
         return self.output.text
+
+    def get_message(self, message):
+        self.chat += message
 
     def bprintf(self, msg):
         if len(msg) > 235:

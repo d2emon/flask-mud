@@ -55,8 +55,15 @@ class Message(db.Model):
     def __str__(self):
         return "<%d>" % (self.message_code)
 
+    @property
     def is_text(self):
         return self.message_code >= -3
+
+    def is_to_player(self, player_id):
+        # if nam1[:4] == "The " or nam1[:4] == "the ":
+        #     if nam1[4:] == luser.lower:
+        #         return True
+        return self.to_user_id == player_id
 
 
 """
