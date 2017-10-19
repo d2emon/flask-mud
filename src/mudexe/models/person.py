@@ -53,7 +53,7 @@ class Person(db.Model):
             # self.person.sco = user.my_sco
             if user.zapped:
                 return
-            user.buff.bprintf("\nSaving %s\n" % (self.name))
+            user.buff.bprintf("\nSaving %s\n" % (self.user.name))
         self.save()
 
     def __repr__(self):

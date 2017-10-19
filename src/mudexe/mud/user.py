@@ -5,15 +5,25 @@ from datetime import datetime
 from auth.models import User as UserModel
 
 
-from ..gamego.signals import alarm
+# from ..gamego.signals import alarm
 from ..models import Message, Person
 from ..models.player import Player, SEX_FEMALE
-from ..models.location import STARTING_LOCATIONS, Location
+from ..models.location import Location
 from ..models.item import Item, Door
 from .exceptions import Crapup, GoError
 from .textbuff import TextBuffer
-from .tty import special
+# from .tty import special
 from .world import World
+
+
+class NoWizzard(Exception):
+    """
+    """
+    def __init__(self, msg="What?"):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 
 # ???
@@ -79,7 +89,6 @@ class User():
     in_ms = ""
     # ???
     out_ms = ""
-
 
     def __init__(self, name):
         self.name = name  # globme
@@ -212,14 +221,13 @@ class User():
         self.dumpitems()
         if self.player.visibility < 10000:
             bk = "%s has departed from AberMUDII\n" % (self.name)
-            self.sendsys(user, -10113, 0, bk)
+            self.sendsys(self, -10113, 0, bk)
         if not self.zapped:
             self.person.saveme(self, zapped=self.zapped)
         self.player.delete()
         self.world.closeworld()
 
-        sntn = self
-        self.buff.chksnp(sntn, user)
+        self.buff.chksnp(self, self)
 
     def deathroom(self, room):
         if not room.deathroom:
@@ -302,6 +310,10 @@ class User():
                 self.hiccup()
 
     # Actions
+    def test_wizzard(self):
+        if not self.person.is_wizzard:
+            raise NoWizzard()
+
     def say(self, message=""):
         return "say %s" % (message)
 
@@ -415,31 +427,13 @@ class User():
         self.person.saveme(self, zapped=self.zapped)
         # raise Crapup("Goodbye")
 
-
     def reset(self):
         """
         rescom
         """
-        if not self.person.is_wizzard:
-            raise Exception("What ?")
-
+        self.test_wizzard()
         self.broad("Reset in progress....\nReset Completed....\n")
-
-        # Load objinfo
-        # b = openlock(RESET_DATA, "r")
-        # objinfo = b.sec_read(0, 4 * numobs)
-        # b.fcloselock()
-
-        # Write reset time
-        # i = time()
-        # a = fopen(RESET_T, "w")
-        # a.fprintf("Last Reset At %s\n" % (ctime(i)))
-        # a.fclose()
-        # a = fopen(RESET_N, "w")
-        # a.fprintf("%ld\n" % (i))
-        # a.fclose(a)
-
-        # resetplayers()
+        self.world.reset()
 
     # Events
     def on_go(self, location=None, direction=0):
@@ -559,7 +553,7 @@ class User():
             pass
 
     def broad(self, message):
-        # rd_qd = 1
+        self.buff.rd_qd = True
         self.send2(text=message)
 
     # Send shortcuts
@@ -648,7 +642,7 @@ class User():
             location = self.location
 
         self.world.openworld()
-        self.player.location = chan
+        self.player.location = location
         # ???
         self.player.save()
         # ???

@@ -13,7 +13,7 @@ from .models.player import Player
 # from .forms import GameSessionForm
 
 
-from .mud.user import User as GameUser
+from .mud.user import User as GameUser, NoWizzard
 from .mud.tty import PageTerminal
 from .mud.exceptions import GoError
 
@@ -211,6 +211,23 @@ def quit():
     try:
         user.quit()
     except GoError as e:
+        flash(e)
+
+    return redirect(url_for("mudexe.play_game"))
+
+
+@mudexe.route("/reset")
+def reset():
+    """
+    Reset game
+    """
+    user = load_user()
+    if user is None:
+        return redirect(url_for("mudexe.start_game", username="User"))
+
+    try:
+        user.reset()
+    except NoWizzard as e:
         flash(e)
 
     return redirect(url_for("mudexe.play_game"))

@@ -127,12 +127,12 @@ class PlayerQuery(PagedQuery):
         if not user:
             return self
         q = q.filter(Player.id != user.player.id)
-        # self.filter_by(location=user.location)
+        q = q.filter_by(location=user.location)
 
         # Seeplayer
         q = q.filter(Player.visibility <= user.player.level)
-        # if user.ail_blind:
-        #     return False  # Cant see
+        if user.ail_blind:
+            return False  # Cant see
         # if self.here.isdark():
         #     return False
         # if user is not None:
@@ -162,6 +162,20 @@ class Player(db.Model):
     last_message = db.relationship('Message', foreign_keys=[message_id, ])
 
     has_farted = False
+
+    @classmethod
+    def init_data(cls, id, data):
+        p = cls(
+            id=id + 16,
+            name=data.name,
+            location=data.location,
+            strength=data.strength,
+            sex=data.sex,
+            weapon=None,
+            visibility=0,
+            level=data.level
+        )
+        return p
 
     @property
     def here(self):

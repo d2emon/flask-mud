@@ -1238,23 +1238,6 @@ if((iswornby(89,mynum))||(iswornby(113,mynum))||(iswornby(114,mynum)))
 """
 
 
-def resetplayers():
-    for p in Players.query.all():
-        p.delete()
-
-    for id, c in enumerate(pinit):
-        p = Player(
-            id=id + 16,
-            name=c.name,
-            location=c.location,
-            strength=c.strength,
-            sex=c.sex,
-            weapon=None,
-            visibility=0,
-            level=c.level
-        )
-
-
 """
  wearcom()
     {
