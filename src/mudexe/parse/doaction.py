@@ -32,10 +32,23 @@ int verbnum[]={1,1,2,3,4,5,6,7,2,3,4,5,6,7,8,9,9,10,11,12,12,12,13,14
     ,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149
     ,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170
     ,171,172,34,173,174,175,176,177,178,179,180,181,182,35,183,184,185,186,187,188,189};
-
-char *exittxt[]={"north","east","south","west","up","down","n","e","s","w","u","d",0};
-long exitnum[]={1,2,3,4,5,6,1,2,3,4,5,6};
 """
+
+
+EXITS = {
+    "north": 0,
+    "east": 1,
+    "south": 2,
+    "west": 3,
+    "up": 4,
+    "down": 5,
+    "n": 0,
+    "e": 1,
+    "s": 2,
+    "w": 3,
+    "u": 4,
+    "d": 5,
+}
 
 
 def doaction(n):
@@ -54,12 +67,8 @@ def doaction(n):
     extern long mynum;
     extern long my_lev;
     openworld();
-    if((n>1)&&(n<8)){dodirn(n);return;}
     switch(n)
        {
-       case 1:
-          dogocom();
-          break;
        case 139:
           if(in_fight)
              {
@@ -68,31 +77,6 @@ def doaction(n):
           gropecom();
           break;
        case 8:
-          if(isforce)
-             {
-             bprintf("You can't be forced to do that\n");
-             break;
-             }
-          rte(globme);
-          openworld();
-          if(in_fight)
-             {
-             bprintf("Not in the middle of a fight!\n");
-             break;
-             }
-          sprintf(xx,"%s has left the game\n",globme);
-          bprintf("Ok");
-          sendsys(globme,globme,-10000,curch,xx);
-          sprintf(xx,"[ Quitting Game : %s ]\n",globme);
-          sendsys(globme,globme,-10113,0,xx);
-          dumpitems();
-          setpstr(mynum,-1);
-          pname(mynum)[0]=0;
-          closeworld();
-          curmode=0;curch=0;
-          saveme();
-          crapup("Goodbye");
-          break;
        case 9:
           getobj();
           break;
@@ -511,4 +495,53 @@ def doaction(n):
           break;
        }
     }
+    """
+
+
+def dogocom(user, wordbuff=None):
+    """
+    Action 1
+    """
+    # if brkword is None:
+    if wordbuff is None:
+        raise GoError("GO where ?")
+    if wordbuff == "rope":
+        wordbuff = "up"
+    exit_id = EXITS.get(wordbuff)
+    if exit_id is None:
+        raise GoError("Thats not a valid direction")
+    return dodirn(exit_id)
+
+
+def dodirn(user, direction=None):
+    """
+    Action 2-7
+    """
+    user.go(direction)
+
+
+def do_action_8():
+    """
+    if isforce:
+        raise Exception("You can't be forced to do that")
+    user.rte()
+    world.openworld()
+    if user.in_fight:
+        raise Exception("Not in the middle of a fight!")
+    buff.bprintf("Ok")
+
+    xx = "%s has left the game\n" % (user.name)
+    user.sendsys(user, -10000, user.location, xx)
+
+    xx = "[ Quitting Game : %s ]\n" % (user.name)
+    user.sendsys(user, -10113, 0, xx)
+
+    user.dumpitems()
+    user.player.strength = -1
+    del(user.player)
+    world.closeworld()
+    user.curmode = 0
+    user.location = 0
+    user.saveme()
+    raise Crapup("Goodbye")
     """

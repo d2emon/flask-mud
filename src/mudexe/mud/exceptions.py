@@ -33,3 +33,13 @@ class Crapup(Exception):
 
     def __str__(self):
         return self.crapup()
+
+
+class GoError(Exception):
+    """
+    """
+    def __init__(self, msg="You can't go that way"):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg

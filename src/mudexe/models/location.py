@@ -1,9 +1,12 @@
 from app import db
-from global_vars import logger
+# from global_vars import logger
 
 
-from .item import Item
+from .item import Item, Weather
 from .player import Player
+
+
+from ..mud.exceptions import GoError
 
 
 class Zone():
@@ -80,26 +83,9 @@ class Location(db.Model):
         # return x
         return None
 
-    # ???
     def closeroom(self):
-        logger().debug("<<< fclose(%s)", self)
-
-    # ???
-    def showwthr(self):
-        logger().debug("<<< showwthr()")
-        wthr = Item()
-        wthr.desc.append("WEATHER")
-        return wthr
-
-    # ???
-    def getstr(self):
-        logger().debug("<<< getstr(%s)", self)
+        # logger().debug("<<< fclose(%s)", self)
         return None
-
-    # ???
-    def isdark(self):
-        logger().debug("<<< is_dark()")
-        return False
 
     @property
     def zone(self):
@@ -161,16 +147,24 @@ class Location(db.Model):
                     self.description += s
                 self.getstr()
 
-    def no_file(self):
-        self.deathroom = False
-        self.nobr = False
-        self.description = "\nYou are on channel %s\n" % (self.id)
-        return
+    @classmethod
+    def search(cls, id=0):
+        l = cls.query.get(id)
+
+        if l is not None:
+            return l
+
+        l = cls(id=id)
+        l.deathroom = False
+        l.nobr = False
+        l.description = "\nYou are on channel %s\n" % (id)
+        return l
 
     def list_objects(self, user):
         """
         lisobs
         """
+        weather = self.weather
         res = []
         res += self.objects_at(
             flannel=1,
@@ -178,7 +172,8 @@ class Location(db.Model):
             debug=user.debug_mode,
             user=user
         )
-        res += [self.showwthr(), ]
+        if weather:
+            res.append(weather)
         res += self.objects_at(
             flannel=0,
             include_destroyed=user.person.is_wizzard,
@@ -212,14 +207,6 @@ class Location(db.Model):
         if user is not None:
             user.wd_people(res[-1])
         return res
-
-    @property
-    def look(self):
-        if self.isdark():
-            self.closeroom()
-            return "It is dark\n"
-        self.closeroom()
-        return self.description
 
     def lobjsat(self, user):
         self.aobjsat(1, user)
@@ -257,3 +244,80 @@ class Location(db.Model):
             return "Nothing\n"
         res += "\n"
         return res
+
+    @property
+    def weather(self):
+        if not self.outdoors:
+            return None
+        return Weather(self.climate)
+
+    @property
+    def outdoors(self):
+        if self.id in [100, 101, 102]:
+            return True
+        # elif self.id == 183:
+        #     return False
+        elif self.id == 170:
+            return False
+        else:
+            if self.id > 168 and self.id < 191:
+                return True
+            if self.id > 172 and self.id < 181:
+                return True
+        return False
+
+    @property
+    def climate(self):
+        if self.id > 178 and self.id < 199:
+            return 1
+        if self.id >= 100 and self.id <= 178:
+            return 2
+        return 0
+
+    @property
+    def dark(self):
+        if self.id == 1100 or self.id == 1101:
+            return False
+        if self.id >= 1113 and self.id <= 1123:
+            return True
+        if self.id < 300 or self.id > 399:
+            return False
+        return True
+
+    @property
+    def has_light(self):
+        if not self.dark:
+            return True
+
+        if Item.light_at_location(self.id) is None:
+            return True
+        return False
+
+    def on_go(self, user, direction):
+        if self.has_intense_heat:
+            if not user.shielded:
+                raise GoError("The intense heat drives you back")
+            else:
+                user.buff.bprintf("The shield protects you from the worst of the lava stream's heat")
+
+        if self.id <= 0:
+            raise GoError()
+
+    @property
+    def has_intense_heat(self):
+        return self.id == 139
+
+    def exits(self, exit_id):
+        if exit_id == 0:
+            return self.north
+        elif exit_id == 1:
+            return self.east
+        elif exit_id == 2:
+            return self.south
+        elif exit_id == 3:
+            return self.west
+        elif exit_id == 4:
+            return self.up
+        elif exit_id == 5:
+            return self.down
+        return 0

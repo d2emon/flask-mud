@@ -89,7 +89,7 @@ class PlayerQuery(PagedQuery):
         # self.filter_by(location=user.location)
 
         # Seeplayer
-        q = q.filter(Player.visible <= user.player.level)
+        q = q.filter(Player.visibility <= user.player.level)
         # if user.ail_blind:
         #     return False  # Cant see
         # if self.here.isdark():

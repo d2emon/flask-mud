@@ -79,6 +79,10 @@ class User():
     wd_them = ""
     # ???
     wd_there = ""
+    # ???
+    in_ms = ""
+    # ???
+    out_ms = ""
 
     def __init__(self, name):
         self.name = name  # globme
@@ -182,8 +186,10 @@ class User():
 
     def eorte(self):
         self.interrupt = self.time_to_interrupt()
-        if self.interrupt:
-            self.last_io_interrupt = datetime.now()
+        if not self.interrupt:
+            return
+
+        self.last_io_interrupt = datetime.now()
 
         # Tick invisibility counter
         self.invisibility_next_round()
@@ -306,10 +312,16 @@ class User():
         self.buff.bprintf("\nSaving %s\n" % (self.name))
         self.person.save()
 
-    def trapch(self, chan):
+    def trapch(self, chan=None):
+        if chan is None:
+            chan = self.location
+
         self.world.openworld()
         self.player.location = chan
-        self.lookin()
+        # ???
+        self.player.save()
+        # ???
+        self.look()
 
     def loseme(self):
         alarm.sig_aloff()
@@ -329,10 +341,14 @@ class User():
         sntn = self
         self.buff.chksnp(sntn, self)
 
-    def deathroom(self):
+    def deathroom(self, room):
+        if not room.deathroom:
+            return
+        self.ail_blind = False
         if self.person.is_wizzard:
             self.buff.bprintf("<DEATH ROOM>\n")
         else:
+            self.buff.bprintf(self.look_room_description(room))
             self.loseme()
             raise DeathRoom
 
@@ -353,10 +369,15 @@ class User():
             prmpt = "(%s)" % prmpt
         return "\r" + prmpt
 
+    def is_dark(self, room):
+        if self.person.is_wizzard:
+            return False
+        return not room.has_light
+
     def cansee(self, room):
         if self.ail_blind:
             return False
-        return not room.isdark()
+        return not self.is_dark(room)
 
     def end_fight(self):
         self.in_fight = 0
@@ -428,34 +449,23 @@ class User():
 
         self.world.closeworld()
 
-        room = Location.query.get(-room_id)
-        if room is None:
-            room = Location(id=room_id)
-            room.no_file()
+        room = Location.search(room_id)
 
         if self.person.is_wizzard:
             self.wd_there = room.name
-        room_description = room.look
-        room_objects = []
-        room_people = []
+
         self.world.openworld()
 
         if room.nobr:
             self.brmode = False
 
         if room.deathroom:
-            self.ail_blind = False
-            room_objects = ""
-            room_people = ""
-            self.deathroom()
-
-        if self.brmode:
-            room_description = ""
+            self.deathroom(room)
 
         onlook()
         return {
             "room": room,
-            "description": room_description,
+            "description": self.look_room_description(room),
             "objects": self.look_room_objects(room),
             "people": self.look_room_people(room),
         }
@@ -465,6 +475,13 @@ class User():
         #     roomtext["objects"],
         #     roomtext["people"],
         # ]))
+
+    def look_room_description(self, room):
+        if self.brmode:
+            return ""
+        if self.is_dark(room):
+            return "It is dark"
+        return room.description
 
     def look_room_objects(self, room):
         if not self.cansee(room):
@@ -490,3 +507,91 @@ class User():
         else:
             self.wd_him = p.name
         self.wd_them = self.name
+
+    def go(self, direction):
+        EXITS = [
+            "north",
+            "east",
+            "south",
+            "west",
+            "up",
+            "down",
+        ]
+
+        if self.in_fight > 0:
+            raise GoError("You can't just stroll out of a fight!\nIf you wish to leave a fight, you must FLEE in a direction")
+        # if objects[32].iscarrby(player) and players[25].location = player.location and player[25].name:
+        #     raise GoError("<c>The Golem</c> bars the doorway!")
+        # if chkcrip():
+        #     return
+        room = Location.search(self.location)
+        new_room_id = room.exits(direction)
+        if new_room_id > -2000 and new_room_id < -999:
+            door = Door(new_room_id)
+            new_room_id = door.location
+
+        new_room = Location.search(new_room_id)
+        self.on_go(new_room, direction)
+
+        block = "<s user=\"%s\">%s has gone %s %s.\n</s>" % (
+            self.player.id,
+            self.name,
+            EXITS[direction],
+            self.out_ms
+        )
+        self.sendsys(self, -10000, text=block)
+
+        self.location = new_room_id
+
+        block = "<s user=\"%s\">%s %s\n</s>" % (
+            self.player.id,
+            self.name,
+            self.in_ms
+        )
+        self.sendsys(self, -10000, text=block)
+
+        self.trapch(self.location)
+
+    # Events
+    def on_go(self, location=None, direction=0):
+        if location is None:
+            return
+        if self.has_blocking_figure(direction, location):
+            raise GoError("<p>The Figure</p> holds you back\n<p>The Figure</p> says 'Only true sorcerors may pass'\n")
+        location.on_go(self.player, direction)
+
+    @property
+    def is_shielded(self):
+        for o in [
+            Item(id=113),
+            Item(id=114),
+            Item(id=89),
+        ]:
+            if o.iswornby(self.player):
+                return True
+        return False
+
+    @property
+    def is_sorceror(self):
+        for o in [
+            Item(id=101),
+            Item(id=102),
+            Item(id=103),
+        ]:
+            if o.iswornby(self.player):
+                return True
+        return False
+
+    def has_blocking_figure(self, direction, room):
+        if direction != 2:
+            return False
+        i = Player.query.fpbns("figure")
+        if i is None:
+            return False
+        if i == self.player:
+            return False
+        if room.id != self.location:
+            return False
+        if self.is_sorceror:
+            return False
+        return True

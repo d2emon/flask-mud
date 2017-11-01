@@ -16,7 +16,7 @@
 
 
 class Item():
-    def __init__(self):
+    def __init__(self, id=None):
         # Objects
         self.item_id = 0
         self.name = ""
@@ -31,7 +31,11 @@ class Item():
         # Objinfo
         self.loc = None  # 0
         self.state = 0  # 1
+        self.bits = [False for i in range(16)]  # tstbit 2
         self.carrf = 0  # 3
+
+        if id is not None:
+            self.item_id = id
 
     @classmethod
     def all(cls):
@@ -72,6 +76,27 @@ class Item():
             # o_txt = c.short_name(user, debug_mode=debug_mode)
         return objects
 
+    @classmethod
+    def light_at_location(cls, location_id, **kwargs):
+        """
+        """
+        include_destroyed = kwargs.get('include_destroyed', False)
+        flannel = kwargs.get('flannel')
+        state = kwargs.get('state')
+
+        objects = []
+        for id in range(5):
+            o = cls()
+            o.set_here(location_id, id=id, light=True, **kwargs)
+            objects.append(o)
+        for id in range(5):
+            o = cls()
+            o.set_here(location_id, id=id + 5, carrf=1, **kwargs)
+            # c.carrf == 0 or c.carrf == 3:
+            # c.loc.location != self.id:
+            objects.append(o)
+        return objects
+
     def iswornby(self, user):
         return self.iscarrby(user) and self.carrf == 2
 
@@ -90,6 +115,7 @@ class Item():
         state = kwargs.get('state')
         flannel = kwargs.get('flannel')
         carrf = kwargs.get('carrf')
+        light = kwargs.get('light', False)
 
         if include_destroyed:
             destroyed = (id % 3) == 1
@@ -101,6 +127,7 @@ class Item():
         self.desc.append("Item %d description" % (id))
         self.carrf = carrf  # self.carrf != 1
         self.loc = location
+        self.bits[13] = light
         if destroyed:
             self.is_dest = True
         else:
@@ -146,6 +173,11 @@ class Item():
         if self.is_dest:
             res = "(%s)" % (res)
         return res
+
+    def is_light(self):
+        if self.item_id != 32 and not self.bits[13]:
+            return False
+        return True
 
 
 """
@@ -470,11 +502,6 @@ oclearbit(ob,x)
 extern long objinfo[];
 bit_clear(&(objinfo[4*ob+2]),x);
 }
-otstbit(ob,x)
-{
-extern long objinfo[];
-return(bit_fetch(objinfo[4*ob+2],x));
-}
 osetbyte(o,x,y)
 {
 extern long objinfo[];
@@ -502,3 +529,66 @@ a++;
 return(0);
 }
     """
+
+
+class Weather():
+    CLIMATES = [
+        range(5),
+        [n % 2 for n in range(5)],
+        [0, 3, 4, 3, 4],
+    ]
+
+    def __init__(self, climate_id=0):
+        self.item = Item()
+        self.item.state = 1
+        self.climate_id = climate_id
+        self.climate = self.CLIMATES[climate_id]
+
+    @property
+    def climate_state(self):
+        return self.climate[self.item.state]
+
+    def oplong(self, debug=False):
+        """
+        showwthr
+        """
+        if self.climate_state == 1:
+            if self.climate_id == 1:
+                res = ""
+                res += "It is raining, a gentle mist of rain, which sticks to everything around\n"
+                res += "you making it glisten and shine. High in the skies above you is a rainbow\n"
+                return res
+            else:
+                return "<c>It is raining\n</c>"
+        if self.climate_state == 2:
+            return "<c>The skies are dark and stormy\n</c>"
+        if self.climate_state == 3:
+            return "<c>It is snowing</c>\n"
+        if self.climate_state == 4:
+            return "<c>A blizzard is howling around you</c>\n"
+        return "None"
+
+
+def Door():
+    def __init__(self, id=0):
+        door_id = -(id + 1000)
+        self.item = Item(id=door_id)
+        self.back = Item(id=door_id)  # ^ 1  # other door side
+
+    def is_invisible(self, room):
+        if self.item.name == "door":
+            return True
+        if room.isdark():
+            return True
+        if not self.item.desc[self.item.state]:
+            return True
+        return False
+
+    def location(self):
+        if self.item.state == 0:
+            return self.back.loc
+
+        if self.is_invisible:
+            raise GoError()  # Invis doors
+        else:
+            raise GoError("The door is not open")
