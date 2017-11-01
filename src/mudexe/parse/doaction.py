@@ -1,37 +1,46 @@
 """
-char *verbtxt[]={"go","climb","n","e","s","w","u","d",
-    "north","east","south","west","up","down",
-    "quit",
-    "get","take","drop","look","i","inv","inventory","who",
-    "reset","zap","eat","drink","play",
-    "shout","say","tell","save","score"
-    ,"exorcise","give","steal","pinch","levels","help","value"
-    ,"stats","examine","read","delete","pass","password",
-    "summon","weapon","shoot","kill","hit","fire","launch","smash","break",
-    "laugh","cry","burp","fart","hiccup","grin","smile","wink","snigger"
-    ,"pose","set","pray","storm","rain","sun","snow","goto",
-    "wear","remove","put","wave","blizzard","open","close",
-    "shut","lock","unlock","force","light","extinguish","where","turn",
-    "invisible","visible","pull","press","push","cripple","cure","dumb",
-    "change","missile","shock","fireball","translocate","blow",
-    "sigh","kiss","hug","slap","tickle","scream","bounce","wiz"
-    ,"stare","exits","crash","sing","grope","spray"
-    ,"groan","moan","directory","yawn","wizlist","in","smoke"
-    ,"deafen","resurrect","log","tss","rmedit","loc","squeeze","users"
-    ,"honeyboard","inumber","update","become","systat","converse"
-    ,"snoop","shell","raw","purr","cuddle","sulk","roll","credits"
-    ,"brief","debug","jump","wield","map","flee","bug","typo","pn"
-    ,"blind","patch","debugmode","pflags","frobnicate","strike"
-    ,"setin","setout","setmin","setmout","emote","dig","empty"
+char *verbtxt[]={
+    "go","climb","n","e","s","w","u","d", "north","east","south","west","up","down", "quit", "get","take","drop",
+    "look","i","inv","inventory","who","reset","zap","eat","drink","play","shout","say","tell",
+    "save","score","exorcise","give","steal","pinch","levels","help","value","stats","examine","read",
+    "delete","pass","password","summon","weapon","shoot","kill","hit","fire","launch","smash","break",
+    "laugh",
+    "cry","burp","fart","hiccup","grin","smile","wink","snigger","pose","set",
+    "pray","storm","rain","sun","snow","goto",
+    "wear",
+    "remove","put","wave","blizzard","open","close","shut","lock","unlock","force","light",
+    "extinguish","where","turn","invisible","visible","pull","press","push","cripple","cure","dumb",
+    "change","missile","shock","fireball","translocate","blow","sigh","kiss","hug","slap",
+    "tickle","scream","bounce","wiz","stare","exits","crash","sing","grope","spray",
+    "groan","moan","directory","yawn","wizlist","in","smoke","deafen","resurrect","log",
+    "tss","rmedit","loc","squeeze","users","honeyboard","inumber","update","become","systat",
+    "converse","snoop","shell","raw","purr","cuddle","sulk","roll","credits","brief",
+    "debug","jump","wield","map","flee","bug","typo","pn","blind","patch","debugmode",
+    "pflags","frobnicate",
+    "strike",
+    "setin","setout","setmin","setmout","emote","dig","empty"
     ,0 };
-int verbnum[]={1,1,2,3,4,5,6,7,2,3,4,5,6,7,8,9,9,10,11,12,12,12,13,14
-    ,15,16,16,17,18,19,20,21,22,23,24,25,25,26,27,28,29,30,30,31,32,32,33,34,35,35,35,35,35
-    ,35,35,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66
-    ,100,101,102,103,104,105,106,106,107,108,109,110,111,112,117,114,115,117,117,117
-    ,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133
-    ,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149
-    ,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170
-    ,171,172,34,173,174,175,176,177,178,179,180,181,182,35,183,184,185,186,187,188,189};
+int verbnum[]={
+    1,1,2,3,4,5,6,7,2,3,4,5,6,7,8,9,9,10,
+    11,12,12,12,13,14,15,16,16,17,18,19,20,
+    21,22,23,24,25,25,26,27,28,29,30,30,
+    31,32,32,33,34,35,35,35,35,35,35,35,
+    50,
+    51,52,53,54,55,56,57,58,59,60,
+    61,62,63,64,65,66,
+    100,
+    101,102,103,104,105,106,106,107,108,109,110,
+    111,112,117,114,115,117,117,117,118,119,120,
+    121,122,123,124,125,126,127,128,129,130,
+    131,132,133,134,135,136,137,138,139,140,
+    141,142,143,144,145,146,147,148,149,150,
+    151,152,153,154,155,156,157,158,159,160,
+    161,162,163,164,165,166,167,168,169,170,
+    171,172,34,173,174,175,176,177,178,179,180,
+    181,182,
+    35,
+    183,184,185,186,187,188,189
+};
 """
 
 
@@ -69,6 +78,62 @@ def doaction(n):
     openworld();
     switch(n)
        {
+    1: dogocom
+    2: dodirn
+    3: dodirn
+    4: dodirn
+    5: dodirn
+    6: dodirn
+    7: dodirn
+    8: QUIT;
+    9: getobj();
+    10: dropitem();
+    11: look_cmd();
+    12: inventory();
+    13: whocom();
+    14: rescom();
+    15: lightning();
+    16: eatcom();
+    17: playcom();
+    18: shoutcom();
+    19: saycom();
+    20: tellcom();
+    21: saveme();
+    22: scorecom();
+    23: exorcom();
+    24: givecom();
+    25: stealcom();
+    26: levcom();
+    27: helpcom();
+    28: valuecom();
+    29: stacom();
+    30: examcom();
+    31: delcom();
+    32: passcom();
+    33: sumcom();
+    34: weapcom();
+    35: killcom();
+    ...
+    50: laughcom();
+    51: crycom();
+    52: burpcom();
+    53: fartcom();
+    54: hiccupcom();
+    55: grincom();
+    56: smilecom();
+    57: winkcom();
+    58: sniggercom();
+    59: posecom();
+    60: setcom();
+    61: praycom();
+    62: stormcom();
+    63: raincom();
+    64: suncom();
+    65: snowcom();
+    66: goloccom();
+
+
+
        case 139:
           if(in_fight)
              {
@@ -76,141 +141,8 @@ def doaction(n):
              }
           gropecom();
           break;
-       case 8:
-       case 9:
-          getobj();
-          break;
        case 137:
           crashcom();
-          break;
-       case 10:
-          dropitem();
-          break;
-       case 11:
-          look_cmd();
-          break;
-       case 12:
-          inventory();
-          break;
-       case 13:
-          whocom();
-          break;
-       case 14:
-          rescom();
-          break;
-       case 15:
-          lightning();
-          break;
-       case 16:
-          eatcom();
-          break;
-       case 17:
-          playcom();
-          break;
-       case 18:
-          shoutcom();
-          break;
-       case 19:
-          saycom();
-          break;
-       case 20:
-          tellcom();
-          break;
-       case 21:
-          saveme();
-          break;
-       case 22:
-          scorecom();
-          break;
-       case 23:
-          exorcom();
-          break;
-       case 24:
-          givecom();
-          break;
-       case 25:
-          stealcom();
-          break;
-       case 26:
-          levcom();
-          break;
-       case 27:
-          helpcom();
-          break;
-       case 28:
-          valuecom();
-          break;
-       case 29:
-          stacom();
-          break;
-       case 30:
-          examcom();
-          break;
-       case 31:
-          delcom();
-          break;
-       case 32:
-          passcom();
-          break;
-       case 33:
-          sumcom();
-          break;
-       case 34:
-          weapcom();
-          break;
-       case 35:
-          killcom();
-          break;
-       case 50:
-          laughcom();
-          break;
-       case 51:
-          crycom();
-          break;
-       case 52:
-          burpcom();
-          break;
-       case 53:
-          fartcom();
-          break;
-       case 54:
-          hiccupcom();
-          break;
-       case 55:
-          grincom();
-          break;
-       case 56:
-          smilecom();
-          break;
-       case 57:
-          winkcom();
-          break;
-       case 58:
-          sniggercom();
-          break;
-       case 59:
-          posecom();
-          break;
-       case 60:
-          setcom();
-          break;
-       case 61:
-          praycom();
-          break;
-       case 62:
-          stormcom();
-          break;
-       case 63:
-          raincom();
-          break;
-       case 64:
-          suncom();
-          break;
-       case 65:
-          snowcom();
-          break;
-       case 66:
-          goloccom();
           break;
        case 100:
           wearcom();
@@ -520,28 +452,8 @@ def dodirn(user, direction=None):
     user.go(direction)
 
 
-def do_action_8():
+def do_action_8(user):
     """
-    if isforce:
-        raise Exception("You can't be forced to do that")
-    user.rte()
-    world.openworld()
-    if user.in_fight:
-        raise Exception("Not in the middle of a fight!")
-    buff.bprintf("Ok")
-
-    xx = "%s has left the game\n" % (user.name)
-    user.sendsys(user, -10000, user.location, xx)
-
-    xx = "[ Quitting Game : %s ]\n" % (user.name)
-    user.sendsys(user, -10113, 0, xx)
-
-    user.dumpitems()
-    user.player.strength = -1
-    del(user.player)
-    world.closeworld()
-    user.curmode = 0
-    user.location = 0
-    user.saveme()
-    raise Crapup("Goodbye")
+    Action 8
     """
+    user.quit()

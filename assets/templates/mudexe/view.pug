@@ -37,18 +37,100 @@ block content
                    | {% endfor %}
               | {% endfor %}
             | {% endif %}
+
+      .col-md-4
+        .row
+          .col-md-6
+            .row
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='north') }}") North
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='up') }}") Up
+            .row
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='west') }}") West
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='east') }}") East
+              .col-md-3
+                | &nbsp;
+            .row
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='south') }}") South
+              .col-md-3
+                | &nbsp;
+              .col-md-3
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Down
+          .col-md-6
+            ul
+              li
+                a(href="{{ url_for('mudexe.quit') }}") Quit
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Take
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Drop
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Look
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Inventory
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Who
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Reset
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Zap
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Eat
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Play
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Shout
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Say
+              li
+                a(href="{{ url_for('mudexe.go', direction='down') }}") Tell
+        div
+          | "save","score","exorcise","give","steal","pinch","levels","help","value","stats","examine","read",
+          | "delete","pass","password","summon","weapon","shoot","kill","hit","fire","launch","smash","break",
+          | "laugh",
+          | "cry","burp","fart","hiccup","grin","smile","wink","snigger","pose","set",
+          | "pray","storm","rain","sun","snow","goto",
+          | "wear",
+          | "remove","put","wave","blizzard","open","close","shut","lock","unlock","force","light",
+          | "extinguish","where","turn","invisible","visible","pull","press","push","cripple","cure","dumb",
+          | "change","missile","shock","fireball","translocate","blow","sigh","kiss","hug","slap",
+          | "tickle","scream","bounce","wiz","stare","exits","crash","sing","grope","spray",
+          | "groan","moan","directory","yawn","wizlist","in","smoke","deafen","resurrect","log",
+          | "tss","rmedit","loc","squeeze","users","honeyboard","inumber","update","become","systat",
+          | "converse","snoop","shell","raw","purr","cuddle","sulk","roll","credits","brief",
+          | "debug","jump","wield","map","flee","bug","typo","pn","blind","patch","debugmode",
+          | "pflags","frobnicate",
+          | "strike",
+          | "setin","setout","setmin","setmout","emote","dig","empty"
+        .chat(style="height: 200px;margin-bottom: 10px;")
+          pre(style="height: 100%;")
+            | {% if chat %}
+            | {% for s in chat %}
+            | {{s}}
+            | {% endfor %}
+            | {% endif %}
         .game-log
           pre
             | {{text1}}
-        pre
-          | {{text}}
-        div
-          form
-            | {{prompt}}
-            input(type="text")
-        div
-          a(href="{{ url_for('mudexe.play_game') }}") Play
-      .col-md-4
+          div
+            form
+              | {{prompt}}
+              input(type="text", id="cmd", name="cmd")
+              input(type="submit")
+          pre
+            | {{text}}
         .data
           | {% if users %}
           ul.users
@@ -62,7 +144,7 @@ block content
           | {% if players %}
           ul.players
             | {% for p in players %}
-            li {{p.name}}
+            li {{p.name}} [{{p.location}}]
             | {% endfor %}
           | {% else %}
           div No players

@@ -38,21 +38,6 @@ Sectors 1-n  in pairs ie [128 words]
 """
 
 
-def vcpy(dest, offd, source, offs, l):
-    """
-long *dest,*source;
-long offd,offs,len;
-    {
-    long c;
-    c=0;
-    while(c<len)
-       {
-       dest[c+offd]=source[c+offs];
-       c++;
-       }
-    }
-    """
-
 # long gurum=0;
 
 
@@ -88,22 +73,6 @@ def cleanup(inpbk):
 # long moni=0;
 
 
-def broad(mesg):
-    """
- char *mesg;
-    {
-extern long rd_qd;
-char bk2[256];
-long block[128];
-rd_qd=1;
-block[1]= -1;
-strcpy(bk2,mesg);
-vcpy(block,2,(long *)bk2,0,126);
-send2(block);
-}
-    """
-
-
 def tbroad(message):
     """
 char *message;
@@ -117,28 +86,6 @@ char *message;
 # long  tmpimu=0;
 # char  *echoback="*e";
 # char  *tmpwiz=".";/* Illegal name so natural immunes are ungettable! */
-
-
-def split(block, nam1, nam2, work, luser):
-    """
- long *block;
- char *nam1;
- char *nam2;
- char *work;
- char *luser;
-    {
-    long wkblock[128],a;
-    vcpy(wkblock,0,block,2,126);
-    vcpy((long *)work,0,block,64,64);
-    a=scan(nam1,(char *)wkblock,0,"",".");
-    scan(nam2,(char *)wkblock,a+1,"",".");
-if((strncmp(nam1,"The ",4)==0)||(strncmp(nam1,"the ",4)==0))
-{
-if(!strcmp(lowercase(nam1+4),lowercase(luser))) return(1);
-}
-    return(!strcmp(lowercase(nam1),lowercase(luser)));
-    }
-    """
 
 
 def revise(cutoff):

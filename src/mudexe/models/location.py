@@ -1,5 +1,6 @@
 from app import db
 # from global_vars import logger
+import random
 
 
 from .item import Item, Weather
@@ -29,30 +30,30 @@ class Zone():
 
 
 ZONES = [
-    Zone("LIMBO", 0, 1),
-    Zone("WSTORE", 1, 2),
-    Zone("HOME", 2, 4),
-    Zone("START", 4, 5),
-    Zone("PIT", 5, 6),
-    Zone("WIZROOM", 6, 19),
-    Zone("DEAD", 19, 99),
-    Zone("BLIZZARD", 99, 299),
-    Zone("CAVE", 299, 399),
-    Zone("LABRNTH", 399, 499),
-    Zone("FOREST", 499, 599),
-    Zone("VALLEY", 599, 699),
-    Zone("MOOR", 699, 799),
-    Zone("ISLAND", 799, 899),
-    Zone("SEA", 899, 999),
-    Zone("RIVER", 999, 1049),
-    Zone("CASTLE", 1049, 1069),
-    Zone("TOWER", 1069, 1099),
-    Zone("HUT", 1099, 1101),
-    Zone("TREEHOUSE", 1101, 1105),
-    Zone("QUARRY", 1105, 2199),
-    Zone("LEDGE", 2199, 2299),
-    Zone("INTREE", 2299, 2499),
-    Zone("WASTE", 2499, 99999),
+    Zone("LIMBO", 0, 2),
+    Zone("WSTORE", 2, 3),
+    Zone("HOME", 3, 5),
+    Zone("START", 5, 6),
+    Zone("PIT", 6, 7),
+    Zone("WIZROOM", 7, 20),
+    Zone("DEAD", 20, 100),
+    Zone("BLIZZARD", 100, 300),
+    Zone("CAVE", 300, 400),
+    Zone("LABRNTH", 400, 500),
+    Zone("FOREST", 500, 600),
+    Zone("VALLEY", 600, 700),
+    Zone("MOOR", 700, 800),
+    Zone("ISLAND", 800, 900),
+    Zone("SEA", 900, 1000),
+    Zone("RIVER", 1000, 1050),
+    Zone("CASTLE", 1050, 1070),
+    Zone("TOWER", 1070, 1100),
+    Zone("HUT", 1100, 1102),
+    Zone("TREEHOUSE", 1102, 1106),
+    Zone("QUARRY", 1106, 2200),
+    Zone("LEDGE", 2200, 2300),
+    Zone("INTREE", 2300, 2500),
+    Zone("WASTE", 2500, 99999),
 ]
 
 
@@ -86,6 +87,10 @@ class Location(db.Model):
     def closeroom(self):
         # logger().debug("<<< fclose(%s)", self)
         return None
+
+    @classmethod
+    def starting(cls):
+        return random.choice(STARTING_LOCATIONS)
 
     @property
     def zone(self):
@@ -255,14 +260,20 @@ class Location(db.Model):
     def outdoors(self):
         if self.id in [100, 101, 102]:
             return True
-        # elif self.id == 183:
-        #     return False
+        elif self.id == 183:
+            return False
         elif self.id == 170:
             return False
         else:
-            if self.id > 168 and self.id < 191:
+            if self.id >= 168 and self.id <= 191:
                 return True
-            if self.id > 172 and self.id < 181:
+            elif self.id >= 210 and self.id <= 211:
+                return True
+            elif self.id == 650:
+                return False
+            elif self.id >= 1050 and self.id <= 1100:
+                return False
+            elif self.id >= 600:
                 return True
         return False
 

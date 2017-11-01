@@ -1,24 +1,29 @@
 from global_vars import logger
 from datetime import datetime
-import random
 
 
 from auth.models import User as UserModel
 
 
-from ..gamego.signals import alarm
+# from ..gamego.signals import alarm
 from ..models import Message, Person
 from ..models.player import Player, SEX_FEMALE
-from ..models.location import STARTING_LOCATIONS, Location
-from .exceptions import Crapup
+from ..models.location import Location
+from ..models.item import Item, Door
+from .exceptions import Crapup, GoError
 from .textbuff import TextBuffer
-from .tty import special
+# from .tty import special
 from .world import World
 
 
-# ???
-def gamrcv(msg):
-    logger().debug("<<< gamrcv(%s)", msg)
+class NoWizzard(Exception):
+    """
+    """
+    def __init__(self, msg="What?"):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
 
 
 # ???
@@ -58,15 +63,11 @@ class DeathRoom(Crapup):
 
 class User():
     # ???
-    ail_blind = False
-    # ???
     in_fight = 0
     # ???
     fighting = None
     # ???
     wpnheld = -1
-    # ???
-    ail_dumb = False
     # ???
     has_farted = False
     # ???
@@ -113,18 +114,45 @@ class User():
         self.me_drunk = 0
         self.me_cal = 0
 
+        self.ail_dumb = False
+        self.ail_crip = False
+        self.ail_blind = False
+        self.ail_deaf = False
+
+        self.in_ms = "has arrived."
+        self.out_ms = ""
+        self.mout_ms = "vanishes in a puff of smoke."
+        self.min_ms = "appears with an ear-splitting bang."
+
         # Other
         self.buff = TextBuffer()
         # self.terminal = Terminal("MUD_PROGRAM_NAME", self.name)
         # self.terminal.set_user(self)
         self.world = World()
         self.player = Player.query.by_user(self.model)
-        self.person = Person.query.by_user(self.model)
+        self.person = Person.initme(self.model)
+        # self.person = Person.query.by_user(self.model)
 
     # ???
     def on_timing(self):
         logger().debug("<<< on_timing()")
         return 0
+
+    @property
+    def user_id(self):
+        if self.model is None:
+            return None
+        return self.model.id
+
+    def load(self):
+        if self.player is None:
+            return False
+        if self.person is None:
+            return False
+        self.location = self.player.location
+        self.message_id = self.player.message_id
+        self.room = Location.query.get(self.location)
+        return True
 
     def time_to_interrupt(self):
         if self.last_io_interrupt is None:
@@ -138,52 +166,82 @@ class User():
 
         return self.interrupt
 
-    def load(self):
-        if self.player is None:
-            return False
-        if self.person is None:
-            return False
-        self.location = self.player.location
-        self.message_id = self.player.message_id
-        self.room = Location.query.get(self.location)
-        return True
-
+    # StartUp
     def prepare_game(self):
         self.message_id = None
-        self.put_player()
+        self.player = self.world.put_player(self)
         self.rte()
         self.world.closeworld()
-
         self.message_id = None
-        self.special(".g")
-        self.i_setup = True
 
-    def special(self, cmd):
-        special(cmd, self)
-
-    def put_player(self):
-        """
-        PutMeOn
-        """
-        self.iamon = False
-        self.player = self.world.put_player(self)
-        self.iamon = True
-        return self.player
-
-    def rte(self):
+    def start_game(self):
+        self.curmode = 1
         self.world.openworld()
-        if self.message_id is None:
-            self.message_id = Message.query.findend()
-        messages = Message.query.readmsg(self.message_id)
-        self.message_id = Message.query.findend()
-        for message in messages:
-            self.mstoout(message)
-        self.update()
-        self.eorte()
-        self.rdes = 0
-        self.tdes = 0
-        self.vdes = 0
 
+        # Init person and player
+        self.person = Person.initme(self.model)
+        self.player.from_person(self.person)
+
+        # Send entered
+        self.sendsys(
+            self,
+            -10113,
+            text="<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (
+                self.user_id,
+                self.name
+            )
+        )
+
+        # Go to starting location
+        self.rte()
+        self.location = Location.starting()
+        self.trapch()
+
+        # Send entered
+        self.send_text("<s user=\"%s\">%s  has entered the game\n</s>" % (
+            self.user_id,
+            self.name
+        ))
+
+    # Cansee
+    def is_dark(self, room):
+        if self.person.is_wizzard:
+            return False
+        return not room.has_light
+
+    def cansee(self, room):
+        if self.ail_blind:
+            return False
+        return not self.is_dark(room)
+
+    # Death
+    def death(self):
+        self.i_setup = False
+        self.world.openworld()
+        self.dumpitems()
+        if self.player.visibility < 10000:
+            bk = "%s has departed from AberMUDII\n" % (self.name)
+            self.sendsys(self, -10113, 0, bk)
+        if not self.zapped:
+            self.person.saveme(self, zapped=self.zapped)
+        self.player.delete()
+        self.world.closeworld()
+
+        self.buff.chksnp(self, self)
+
+    def deathroom(self, room):
+        if not room.deathroom:
+            return
+
+        self.ail_blind = False
+        if self.person.is_wizzard:
+            self.buff.bprintf("<DEATH ROOM>\n")
+        else:
+            self.buff.bprintf(self.look_room_description(room))
+            self.death()
+            raise DeathRoom
+
+    # Counters
     def eorte(self):
         self.interrupt = self.time_to_interrupt()
         if not self.interrupt:
@@ -213,175 +271,10 @@ class User():
 
         forchk()
 
+        # Is drunk
         self.drunk_next_round()
+
         self.interrupt = False
-
-    def update(self):
-        xp = self.message_id - self.lasup
-        if xp < 0:
-            xp = -xp
-        if xp < 10:
-            return
-        self.world.openworld()
-        self.player.message_id = self.message_id
-        self.lasup = self.message_id
-
-    def mstoout(self, msg):
-        """
-        Print appropriate stuff from data block
-        """
-        if self.debug_mode:
-            self.buff.bprintf("\n%s" % (msg))
-        if msg.is_text:
-            self.buff.bprintf(msg.text)
-        else:
-            self.sysctrl(msg)
-
-    def sysctrl(self, msg):
-        gamrcv(msg)
-
-    def start_game(self):
-        self.curmode = 1
-        rooms = STARTING_LOCATIONS
-        self.initme()
-        self.world.openworld()
-        self.player.strength = self.person.strength
-        self.player.level = self.person.level
-        if self.person.level < 10000:
-            self.player.visibility = 0
-        else:
-            self.player.visibility = -1
-        self.player.sex = self.person.sex
-        self.player.helping = -1
-        xy = "<s user=\"%s\">%s  has entered the game\n</s>" % (self.model.id, self.name)
-        xx = "<s user=\"%s\">[ %s  has entered the game ]\n</s>" % (self.model.id, self.name)
-        self.sendsys(self, -10113, text=xx)
-        self.rte()
-        room = random.choice(rooms)
-        self.location = room
-        self.trapch(room)
-        self.sendsys(self, -10000, text=xy)
-
-    def sendsys(self, to_player, message_code, channel=None, text=""):
-        if channel is None:
-            channel = self.location
-        # if msg_code != -9900 and msg_code != -10021:
-        #     block[64] = text
-        # else:
-        #     block[64] = i[0]
-        #     block[65] = i[1]
-        #     block[66] = i[2]
-        self.send2(to_player, message_code, channel, text)
-
-    def send2(self, to_player, message_code, channel, text):
-        if to_player is not None:
-            to_player = to_player.player
-        msg = Message(
-            from_player=self.player,
-            to_player=to_player,
-            message_code=message_code,
-            # channel=channel,
-            text=text,
-        )
-        msg.save()
-        # number = self.world.findend() - self.world.findstart()
-        # if number >= 199:
-        #     self.cleanup()
-        #     longwthr()
-
-    def dumpitems(self):
-        self.world.dumpstuff(self.mynum, self.location)
-
-    def initme(self):
-        person = Person.query.by_user(self.model)
-        if person is None:
-            self.buff.bprintf("Creating character....")
-            person = Person(user=self.model)
-            person.sex = self.terminal.asksex()
-        person.save()
-        self.person = person
-        return person
-
-    def saveme(self):
-        # self.person.strength = self.my_str
-        # self.person.level = self.my_lev
-        self.person.sex = self.player.sex
-        # self.person.sco = self.my_sco
-        if self.zapped:
-            return
-        self.buff.bprintf("\nSaving %s\n" % (self.name))
-        self.person.save()
-
-    def trapch(self, chan=None):
-        if chan is None:
-            chan = self.location
-
-        self.world.openworld()
-        self.player.location = chan
-        # ???
-        self.player.save()
-        # ???
-        self.look()
-
-    def loseme(self):
-        alarm.sig_aloff()
-        # No interruptions while you are busy dying
-        # ABOUT 2 MINUTES OR SO
-        self.i_setup = False
-        self.world.openworld()
-        self.dumpitems()
-        if self.player.visibility < 10000:
-            bk = "%s has departed from AberMUDII\n" % (self.name)
-            self.sendsys(self, -10113, 0, bk)
-        if not self.zapped:
-            self.saveme()
-        self.player.delete()
-        self.world.closeworld()
-
-        sntn = self
-        self.buff.chksnp(sntn, self)
-
-    def deathroom(self, room):
-        if not room.deathroom:
-            return
-        self.ail_blind = False
-        if self.person.is_wizzard:
-            self.buff.bprintf("<DEATH ROOM>\n")
-        else:
-            self.buff.bprintf(self.look_room_description(room))
-            self.loseme()
-            raise DeathRoom
-
-    @property
-    def prmpt(self):
-        convflgs = {
-            0: ">",
-            1: "\"",
-            2: "*",
-        }
-        prmpt = ""
-        if self.debug_mode:
-            prmpt += "#"
-        if self.person.is_wizzard:
-            prmpt += "----"
-        prmpt += convflgs.get(self.convflg, "?")
-        if self.player.visibility:
-            prmpt = "(%s)" % prmpt
-        return "\r" + prmpt
-
-    def is_dark(self, room):
-        if self.person.is_wizzard:
-            return False
-        return not room.has_light
-
-    def cansee(self, room):
-        if self.ail_blind:
-            return False
-        return not self.is_dark(room)
-
-    def end_fight(self):
-        self.in_fight = 0
-        self.fighting = None
 
     def fight_next_round(self, interrupt=False):
         if self.fighting is None:
@@ -416,21 +309,11 @@ class User():
             if not self.ail_dumb:
                 self.hiccup()
 
-    def apply_convflg(self, work):
-        if self.convflg == 0:
-            return work
-        elif self.convflg == 1:
-            return self.say(work)
-        else:
-            return self.tss(work)
-
-    def next_turn(self):
-        self.interrupt = True
-        self.rte()
-        self.interrupt = False
-        self.on_timing()
-
     # Actions
+    def test_wizzard(self):
+        if not self.person.is_wizzard:
+            raise NoWizzard()
+
     def say(self, message=""):
         return "say %s" % (message)
 
@@ -476,38 +359,6 @@ class User():
         #     roomtext["people"],
         # ]))
 
-    def look_room_description(self, room):
-        if self.brmode:
-            return ""
-        if self.is_dark(room):
-            return "It is dark"
-        return room.description
-
-    def look_room_objects(self, room):
-        if not self.cansee(room):
-            return []
-        return room.list_objects(self)
-
-    def look_room_people(self, room):
-        if not self.cansee(room):
-            return []
-        if not self.curmode:
-            return []
-        return room.list_people(self)
-
-    def wd_people(self, p):
-        """
-        Assign Him her etc according to who it is
-        """
-        # if p.id > 15 and p != Player.query.fpbns("riatha") and p != Player.query.fpbns("shazareth"):
-        #     self.wd_it = p.name
-        #     return
-        if p.sex == SEX_FEMALE:
-            self.wd_her = p.name
-        else:
-            self.wd_him = p.name
-        self.wd_them = self.name
-
     def go(self, direction):
         EXITS = [
             "north",
@@ -533,24 +384,56 @@ class User():
         new_room = Location.search(new_room_id)
         self.on_go(new_room, direction)
 
-        block = "<s user=\"%s\">%s has gone %s %s.\n</s>" % (
-            self.player.id,
+        self.send_text("%s has gone %s %s.\n" % (
             self.name,
             EXITS[direction],
             self.out_ms
-        )
-        self.sendsys(self, -10000, text=block)
+        ), user_id=self.user_id)
 
         self.location = new_room_id
 
-        block = "<s user=\"%s\">%s %s\n</s>" % (
-            self.player.id,
+        self.send_text("%s %s\n" % (
             self.name,
             self.in_ms
-        )
-        self.sendsys(self, -10000, text=block)
+        ), user_id=self.user_id)
 
         self.trapch(self.location)
+
+    def quit(self):
+        # if isforce:
+        #     raise Exception("You can't be forced to do that")
+        self.rte()
+        self.world.openworld()
+
+        if self.in_fight:
+            raise Exception("Not in the middle of a fight!")
+
+        self.buff.bprintf("Ok")
+
+        self.send_text("%s has left the game\n" % (
+            self.name,
+        ))
+
+        self.sendsys(self, -10113, 0, text="[ Quitting Game : %s ]\n" % (
+            self.name
+        ))
+
+        self.dumpitems()
+        self.player.strength = -1
+        self.player.delete()
+        self.world.closeworld()
+        self.curmode = 0
+        self.location = 0
+        self.person.saveme(self, zapped=self.zapped)
+        # raise Crapup("Goodbye")
+
+    def reset(self):
+        """
+        rescom
+        """
+        self.test_wizzard()
+        self.broad("Reset in progress....\nReset Completed....\n")
+        self.world.reset()
 
     # Events
     def on_go(self, location=None, direction=0):
@@ -595,3 +478,212 @@ class User():
         if self.is_sorceror:
             return False
         return True
+
+    # Work with messages
+    def rte(self):
+        self.world.openworld()
+
+        # If position unknown
+        if self.message_id is None:
+            self.message_id = Message.query.findend()
+
+        # Read messages
+        messages = Message.query.readmsg(self.message_id)
+        self.message_id = Message.query.findend()
+        for message in messages:
+            self.mstoout(message)
+
+        # ???
+        self.player.message_id = self.message_id
+        self.player.save()
+
+        # Other
+        self.update()
+        self.eorte()
+        self.rdes = 0
+        self.tdes = 0
+        self.vdes = 0
+
+    def update(self):
+        xp = self.message_id - self.lasup
+        if xp < 0:
+            xp = -xp
+        if xp < 10:
+            return
+        self.world.openworld()
+        self.player.message_id = self.message_id
+        self.lasup = self.message_id
+
+    def mstoout(self, msg):
+        """
+        Print appropriate stuff from data block
+        """
+        if self.debug_mode:
+            self.buff.bprintf("\n%s" % (msg))
+        if msg.is_text:
+            self.buff.bprintf(msg.text)
+        else:
+            self.sysctrl(msg)
+
+    def sysctrl(self, msg):
+        self.gamrcv(msg)
+
+    def sendsys(self, from_player, message_code, channel=None, text=""):
+        if channel is None:
+            channel = self.location
+        # if msg_code != -9900 and msg_code != -10021:
+        #     block[64] = text
+        # else:
+        #     block[64] = i[0]
+        #     block[65] = i[1]
+        #     block[66] = i[2]
+        to_player = self.player
+        if from_player is not None:
+            from_player = from_player.player
+        self.send2(from_player, to_player, message_code, channel, text)
+
+    def send2(self, from_player=None, to_player=None, message_code=0, channel=None, text=""):
+        msg = Message(
+            from_player=from_player,
+            to_player=to_player,
+            message_code=message_code,
+            # channel=channel,
+            text="%d::%s" % (channel, text),
+        )
+        msg.save()
+        if self.world.is_need_cleaning:
+            # self.cleanup()
+            # longwthr()
+            print("NEEDS CLEARING")
+            pass
+
+    def broad(self, message):
+        self.buff.rd_qd = True
+        self.send2(text=message)
+
+    def gamrcv(self, message):
+        # extern long zapped;
+        # extern long vdes,tdes,rdes,ades;
+        # auto long  zb[32];
+        # extern long curch;
+        # extern long my_lev;
+        # extern long my_sco;
+        # extern long my_str;
+        # extern long snoopd;
+        # extern long fl_com;
+        # char ms[128];
+        # extern long fighting,in_fight;
+        isme = message.is_to_player(self.player.id)
+        if message.message_code == -20000:
+            self.message_stop_fight(message, isme)
+        # elif message.message_code < -10099:
+        #     return new1rcv(isme, message)
+        elif message.message_code == -10000:
+            self.message_text(message, isme)
+
+    def message_text(self, message, isme):
+        # if isme:
+        #     return
+        # if message.location != user.location:
+        #     return
+        self.buff.bprintf(message.text)
+        self.buff.get_message(message.text)
+        return
+
+    def message_stop_fight(self, message, isme):
+        if Player.query.fpbns(message.to_user) != self.fighting:
+            return
+        self.in_fight = 0
+        self.fighting = None
+
+    # Send shortcuts
+    def send_text(self, text, user_id=None):
+        if user_id is not None:
+            text = "<s user=\"%s\">%s</s>" % (
+                user_id,
+                text
+            )
+        return self.sendsys(self, -10000, text=text)
+
+    # Other
+    # IDK
+    @property
+    def prmpt(self):
+        convflgs = {
+            0: ">",
+            1: "\"",
+            2: "*",
+        }
+        prmpt = ""
+        if self.debug_mode:
+            prmpt += "#"
+        if self.person.is_wizzard:
+            prmpt += "----"
+        prmpt += convflgs.get(self.convflg, "?")
+        if self.player.visibility:
+            prmpt = "(%s)" % prmpt
+        return "\r" + prmpt
+
+    def end_fight(self):
+        self.in_fight = 0
+        self.fighting = None
+
+    def apply_convflg(self, work):
+        if self.convflg == 0:
+            return work
+        elif self.convflg == 1:
+            return self.say(work)
+        else:
+            return self.tss(work)
+
+    def next_turn(self):
+        self.interrupt = True
+        self.rte()
+        self.interrupt = False
+        self.on_timing()
+
+    def look_room_description(self, room):
+        if self.brmode:
+            return ""
+        if self.is_dark(room):
+            return "It is dark"
+        return room.description
+
+    def look_room_objects(self, room):
+        if not self.cansee(room):
+            return []
+        return room.list_objects(self)
+
+    def look_room_people(self, room):
+        if not self.cansee(room):
+            return []
+        if not self.curmode:
+            return []
+        return room.list_people(self)
+
+    def wd_people(self, p):
+        """
+        Assign Him her etc according to who it is
+        """
+        # if p.id > 15 and p != Player.query.fpbns("riatha") and p != Player.query.fpbns("shazareth"):
+        #     self.wd_it = p.name
+        #     return
+        if p.sex == SEX_FEMALE:
+            self.wd_her = p.name
+        else:
+            self.wd_him = p.name
+        self.wd_them = self.name
+
+    def dumpitems(self):
+        self.world.dumpstuff(self.player, self.location)
+
+    def trapch(self, location=None):
+        if location is None:
+            location = self.location
+
+        self.world.openworld()
+        self.player.location = location
+        # ???
+        self.player.save()
+        # ???
+        self.look()

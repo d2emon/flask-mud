@@ -4,7 +4,8 @@ Fast File Controller v0.1
 # from global_vars import logger
 # from blib import sec_read, sec_write
 from .exceptions import Crapup
-from ..models import Player
+from ..models import Message
+from ..models.player import Player, PINIT
 
 
 class MudUnaviable(Crapup):
@@ -96,14 +97,31 @@ class World():
         # fcloselock(self.filrf)
         self.filrf = None
 
+    @property
+    def is_full(self):
+        return len(Player.query.all()) > self.maxu
+
+    @property
+    def is_need_cleaning(self):
+        return (Message.query.findend() - Message.query.findfirst()) >= 199
+
     def put_player(self, user):
+        """
+        PutMeOn
+        """
+        user.iamon = False
         self.openworld()
+
         if Player.query.fpbn(user.model.username):
             raise AlreadyOnMud()
-        if len(Player.query.all()) > self.maxu:
+
+        if self.is_full:
             raise MudFull()
+
         player = Player(user=user.model)
         player.puton(user)
+
+        user.iamon = True
         return player
 
     def dumpstuff(self, user, location):
@@ -111,3 +129,34 @@ class World():
             if b.iscarrby(user):
                 b.location = location
                 b.carrf = 0
+
+    def reset_objects(self):
+        """
+        Load objinfo
+        """
+        # b = openlock(RESET_DATA, "r")
+        # objinfo = b.sec_read(0, 4 * numobs)
+        # b.fcloselock()
+        pass
+
+    def reset_players(self):
+        for p in Player.query.all():
+            p.delete()
+
+        for id, c in enumerate(PINIT):
+            p = Player.init_data(id, c)
+            p.save()
+
+    def reset(self):
+        self.reset_objects()
+
+        # Write reset time
+        # i = time()
+        # a = fopen(RESET_T, "w")
+        # a.fprintf("Last Reset At %s\n" % (ctime(i)))
+        # a.fclose()
+        # a = fopen(RESET_N, "w")
+        # a.fprintf("%ld\n" % (i))
+        # a.fclose(a)
+
+        self.reset_players()

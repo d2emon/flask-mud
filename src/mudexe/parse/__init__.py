@@ -125,45 +125,34 @@ class GameCmd():
 
 
 """
-char in_ms[81]="has arrived.";
-char out_ms[81]="";
-char mout_ms[81]="vanishes in a puff of smoke.";
-char min_ms[81]="appears with an ear-splitting bang.";
 char here_ms[81]="is here";
+"""
 
 
- gamrcv(blok)
- long *blok;
-    {
-    extern long zapped;
-    extern long vdes,tdes,rdes,ades;
-    extern char globme[];
-    auto long  zb[32];
-    long *i;
-    extern long curch;
-    extern long my_lev;
-    extern long my_sco;
-    extern long my_str;
-    extern long snoopd;
-    extern long fl_com;
-    char ms[128];
-    char nam1[40],nam2[40],text[256],nameme[40];
-    long isme;
-    extern long fighting,in_fight;
-    strcpy(nameme,globme);
-    lowercase(nameme);
-    isme=split(blok,nam1,nam2,text,nameme);
-    i=(long *)text;
-    if((blok[1]== -20000)&&(fpbns(nam1)==fighting))
-       {
-       in_fight=0;
-       fighting= -1;
-       }
-    if(blok[1]<-10099)
-       {
-       new1rcv(isme,blok[0],nam1,nam2,blok[1],text);
-       return;
-       }
+def gamrcv(user, message):
+    # extern long zapped;
+    # extern long vdes,tdes,rdes,ades;
+    # auto long  zb[32];
+    # extern long curch;
+    # extern long my_lev;
+    # extern long my_sco;
+    # extern long my_str;
+    # extern long snoopd;
+    # extern long fl_com;
+    # char ms[128];
+    # extern long fighting,in_fight;
+    nameme = user.name.lower()
+    nam1 = message.from_user
+    nam2 = message.to_user
+    text = message.text
+    isme = split(blok, nam1, nam2, text, nameme)
+    # i = (int)text
+    if message.message_code == -20000 and Player.query.fpbns(nam1) == user.fighting:
+        user.in_fight = 0
+        user.fighting= -1
+    if message.message_code < -10099:
+        return new1rcv(isme, message)
+    """
     switch(blok[1])
        {
        case -9900:
@@ -196,12 +185,15 @@ char here_ms[81]="is here";
              snoopd=fpbns(nam2);
              }
           break;
-       case -10000:
-          if((isme!=1)&&(blok[0]==curch))
-             {
-             bprintf("%s",text);
-             }
-          break;
+    """
+    if message.message_code == -10000:
+        if isme:
+            return
+        if message.location != user.location:
+            return
+        user.buff.bprintf(text)
+        return
+    """
        case -10030:
           wthrrcv(blok[0]);break;
        case -10021:
@@ -293,9 +285,10 @@ char here_ms[81]="is here";
              }
           break;
           }
-    }
+    """
 
 
+"""
  getreinput(blob)
     {
     extern long stp;
