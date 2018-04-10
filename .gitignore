@@ -108,3 +108,8 @@ node_modules/
 /templates/
 /.project
 /.pydevproject
+
+yarn.lock
+_usr_tmp_-iy7AM
+db/*.db
+ob.out

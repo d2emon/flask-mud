@@ -9,9 +9,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_utils import FlaskUtils
 from config import app_config
 
-
 import os
 
+
+# Env vars
 debug = os.environ.get('FLASK_DEBUG', False)
 config_name = os.environ.get('FLASK_CONFIG', 'production')
 
@@ -22,7 +23,9 @@ def create_app(debug=False, config_name='production'):
     # Loading config
     app.config.from_object(app_config.get(config_name))
     app.config.from_pyfile('config.py')
-    # app.config.from_envvar('FLASK_CONFIG_FILE')
+    if os.environ.get('FLASK_CONFIG_FILE', False):
+        app.config.from_envvar('FLASK_CONFIG_FILE')
+    print(app.config)
     return app
 
 
@@ -49,23 +52,15 @@ migrate = Migrate(app, db)
 session = Session(app)
 
 # Importing blueprints
-# from home import *
 from auth import *
-# from admin import *
-
-# app.register_blueprint(home_blueprint)
 app.register_blueprint(auth_blueprint)
-# app.register_blueprint(admin_blueprint, url_prefix='/admin')
+# app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
+# Something
 from installer import *
-from mudexe import *
-
-# app.register_blueprint(rpg_blueprint, url_prefix='/rpg')
-# app.register_blueprint(campaign_blueprint, url_prefix='/campaign')
-# app.register_blueprint(session_blueprint, url_prefix='/session')
-# app.register_blueprint(world_blueprint, url_prefix='/world')
-
 installer = Installer(app, manager=manager, logging=utils.logging)
+
+from mudexe import *
 mudexe = MudExe(app, manager=manager, logging=utils.logging)
 
 from app.views import *
